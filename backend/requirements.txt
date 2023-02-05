@@ -14,13 +14,13 @@ pandas
 pydantic
 PySocks
 python-dateutil
-python-engineio
-python-socketio
+python-engineio==4.3.1
+python-socketio==5.0.4
 pytz
 requests
 six
 sniffio
-starlette
+starlette==0.22.0
 typing-extensions
 urllib3
 uvicorn
