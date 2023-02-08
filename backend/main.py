@@ -1,7 +1,8 @@
-from typing import List, Union
 from fastapi import FastAPI, Query
+from typing import List, Union
 import numpy as np
 import fxcmpy
+import time
 
 app = FastAPI()
 
@@ -65,6 +66,7 @@ def calc_spread(pairs: Union[List[str], None] = Query(default=None),
     betas = np.array(betas)
     spread = np.dot(betas, prices.T)
 
+    response['datetime'] = time.strftime("%H:%M:%S", time.localtime())
     response['Y'] = pairs[0]
     response['X'] = pairs[1:]
 
