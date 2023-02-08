@@ -1,11 +1,11 @@
-import './App.css';
+import React from 'react';
 
-function App() {
-  return (
-    <div className="App">
-      <h1>hello</h1>
-    </div>
-  );
+const API_URL = 'https://stat-arbitrage-dashboard.onrender.com/symbols/';
+
+const App = () => {
+    return (
+        <h1>App</h1>
+    );
 }
 
 export default App;

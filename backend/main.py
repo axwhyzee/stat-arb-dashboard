@@ -1,45 +1,80 @@
-from fastapi import FastAPI
-import datetime
+from typing import List, Union
+from fastapi import FastAPI, Query
+import numpy as np
 import fxcmpy
-import time
 
 app = FastAPI()
 
-PRICES = {}
-INTERVAL = 15 * 60 # 15 Mins
+pips = {
+    'AUDCAD': 0.0001,
+    'AUDCHF': 0.0001,
+    'AUDJPY': 0.01,
+    'AUDNZD': 0.0001,
+    'AUDUSD': 0.0001,
+    'CADCHF': 0.0001,
+    'CADJPY': 0.01,
+    'CHFJPY': 0.01,
+    'EURAUD': 0.0001,
+    'EURCAD': 0.0001,
+    'EURCHF': 0.0001,
+    'EURGBP': 0.0001,
+    'EURJPY': 0.01,
+    'EURNZD': 0.0001,
+    'EURUSD': 0.0001,
+    'GBPAUD': 0.0001,
+    'GBPCAD': 0.0001,
+    'GBPCHF': 0.0001,
+    'GBPJPY': 0.01,
+    'GBPNZD': 0.0001,
+    'GBPUSD': 0.0001,
+    'NZDCAD': 0.0001,
+    'NZDCHF': 0.0001,
+    'NZDJPY': 0.01,
+    'NZDUSD': 0.0001,
+    'USDCAD': 0.0001,
+    'USDCHF': 0.0001,
+    'USDJPY': 0.01
+}
 
 print('[.] Establishing connection')
 TOKEN = 'ff6efd1deca512f4db9d4e0594040b083ddf3cda'
 CON = fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
 print('[+] Connected')
 
-def epoch_to_timestamp(epoch):
-    return datetime.datetime.fromtimestamp(epoch).strftime('%Y-%m-%d %H:%M:%S')
 
+def get_price(symbol: str):
+    if symbol[3] != '/':
+        symbol = symbol[:3] + '/' + symbol[3:]
+    try:
+        return float(CON.get_candles(symbol, period='m1', number=1)['bidclose'])
+    except:
+        return -1
 
 @app.get('/')
 def read_root():
-    return {}
+    return 'http://127.0.0.1:8000/spread/?pairs=AUDUSD&pairs=CADCHF&betas=1&betas=-4.0686013955488303'
 
 
-@app.get('/symbols/{symbol}')
-def get_price(symbol: str):
-    time_now = int(time.time()) // INTERVAL
-    symbol = symbol.upper()
+@app.get('/spread/')
+def calc_spread(pairs: Union[List[str], None] = Query(default=None),  
+                betas: Union[List[float], None] = Query(default=None)):
     
-    if '/' not in symbol:
-        symbol = symbol[:3] + '/' + symbol[3:]
+    response = {}
 
-    if symbol in PRICES and PRICES[symbol][0] == time_now:
-        return
+    prices = np.array([get_price(pair)/pips[pair] for pair in pairs])
+    betas = np.array(betas)
+    spread = np.dot(betas, prices.T)
 
-    try:
-        price = float(CON.get_candles(symbol, period='m1', number=1)['bidclose'])
-        PRICES[symbol] = [time_now, price]
+    response['Y'] = pairs[0]
+    response['X'] = pairs[1:]
 
-        return {'Symbol': symbol, 'Price': price, 'Datetime': epoch_to_timestamp(time_now * INTERVAL)}
-    except:
-        return {}
+    for i in range(len(prices)):
+        response[pairs[i]] = round(prices[i], 2)
+
+    response['betas'] = [1,] + list(betas[1:])
+    response['spread'] = spread
+    
+    return response
 
 
 @app.get('/close/')
@@ -48,4 +83,7 @@ def close():
     return {'Response': 'Connection closed'}
 
 
+# uvicorn main:app --host 0.0.0.0 --port 10000
 # uvicorn main:app --reload
+
+# http://127.0.0.1:8000/spread/?pairs=AUDUSD&pairs=CADCHF&betas=1&betas=-4.0686013955488303
