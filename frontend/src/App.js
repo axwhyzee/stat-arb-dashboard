@@ -1,5 +1,5 @@
 import React from 'react';
-import './styles.css';
+import './App.css';
 
 import { useEffect } from 'react';
 
@@ -24,8 +24,8 @@ const App = () => {
                 <form className='user-form'>
                     <div>
                         <section className='p-1'>
-                            <label className='input-label' htmlFor='set-name'>Set name</label>
-                            <input name='set-name' className='user-input color-grey' value='------' />
+                            <label className='input-label' htmlFor='set-name'>Set Name</label>
+                            <input name='set-name' className='user-input color-grey' placeholder='Enter a name' />
                         </section>
                         <section className='row'>
                             <div className='p-1 col-6'>
@@ -63,7 +63,7 @@ const App = () => {
                             </div>
                             <div className='p-1 col-6'>
                                 <label className='input-label' htmlFor='beta'>Beta</label>
-                                <input name='beta' className='user-input color-grey' />
+                                <input name='beta' className='user-input color-grey' placeholder='Beta value' />
                             </div>
                         </section>
                         <section>

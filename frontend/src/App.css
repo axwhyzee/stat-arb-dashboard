@@ -22,6 +22,7 @@ main {
 
 .input-label {
     display: block;
+    font-size: 12px;
 }
 
 .user-input {
