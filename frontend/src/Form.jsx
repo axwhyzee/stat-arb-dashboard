@@ -1,17 +1,21 @@
 import React from "react";
+import { useState } from 'react';
 
-const Card = ({ data }) => {
+const Form = ({ addPair }) => {
+    const [pair, setPair] = useState();
+    const [entry, setEntry] = useState()
+    const [beta, setBeta] = useState()
+
+    const onSubmit = (e) => { e.preventDefault() };
+
     return (
-        <form className='user-form'>
+        <form className='user-form' onSubmit={onSubmit}>
             <div>
-                <section className='p-1'>
-                    <label className='input-label' htmlFor='set-name'>Set Name</label>
-                    <input name='set-name' className='user-input color-grey' placeholder='Enter a name' />
-                </section>
                 <section className='row'>
                     <div className='p-1 col-6'>
-                        <label className='input-label' htmlFor=''>Pair</label>
-                        <select name='pair' className='user-input color-grey'>
+                        <label className='input-label' htmlFor='pair'>Pair</label>
+                        <select name='pair' className='user-input color-grey' onChange={e => setPair(e.target.value)}>
+                            <option value=''>-----</option>
                             <option value='AUDCAD'>AUDCAD</option>
                             <option value='AUDCHF'>AUDCHF</option>
                             <option value='AUDJPY'>AUDJPY</option>
@@ -44,12 +48,16 @@ const Card = ({ data }) => {
                     </div>
                     <div className='p-1 col-6'>
                         <label className='input-label' htmlFor='beta'>Beta</label>
-                        <input name='beta' className='user-input color-grey' placeholder='Beta value' />
+                        <input name='beta' className='user-input color-grey' placeholder='Beta value' onChange={e => setBeta(e.target.value)} />
                     </div>
+                </section>
+                <section className='p-1'>
+                    <label className='input-label' htmlFor='entry'>Entry</label>
+                    <input name='entry' className='user-input color-grey' onChange={e => setEntry(e.target.value)} />
                 </section>
                 <section>
                     <div className='p-1'>
-                        <button class='btn btn-success color-grey font-sm'>ADD</button>
+                        <button class='btn-add font-sm' onClick={() => addPair(pair, entry, beta)}>ADD</button>
                     </div>
                 </section>
             </div>
@@ -57,4 +65,4 @@ const Card = ({ data }) => {
     )
 }
 
-export default Card;
+export default Form;

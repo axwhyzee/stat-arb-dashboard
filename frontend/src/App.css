@@ -4,12 +4,47 @@
 }
 
 body {
+    width: 100%;
     background-color: #1d1d1d;
     margin: 0;
+    overflow-x: hidden;
 }
 
-main {
+table {
+    border-collapse: collapse;
+}
+
+tr {
+    border-bottom: 1px solid #464646
+}
+
+td {
+    padding: 10px 4px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    height: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: #5858583d; 
+}
+
+::-webkit-scrollbar-thumb {
+    background: #555555; 
+}
+  
+
+.main-wrapper {
     padding-left: 300px;
+}
+
+html,
+body,
+#root,
+.main-wrapper {
+    height: 100%;
 }
 
 .color-grey {
@@ -20,9 +55,17 @@ main {
     padding: 10px 5px;
 }
 
+.p-2 {
+    padding: 20px;
+}
+
+.pl-2 {
+    padding: 20px 0 20px 20px;
+}
+
 .input-label {
     display: block;
-    font-size: 12px;
+    font-size: 10px;
 }
 
 .user-input {
@@ -34,21 +77,21 @@ main {
     border: 1px solid rgb(70, 70, 70);
 }
 
-.btn {
+.btn-add {
+    background-color: rgb(3, 177, 119);
+    color: #292929;
     font-weight: bold;
     margin-top: 5px;
     padding: 8px 30px;
     border-radius: 4px;
     border: none;
-}
-
-.btn-success {
-    background-color: rgb(19, 83, 62);
     transition: .5s;
 }
 
-.btn-success:hover {
-    background-color: rgb(7, 124, 85);
+.btn-add:hover {
+    background-color: rgb(19, 83, 62);
+    color: rgb(160, 160, 160);
+    cursor: pointer;
 }
 
 .row {
@@ -79,19 +122,82 @@ main {
     top: 0;
 }
 
+.sidebar-wrapper {
+    padding: 15px;
+}
+
+.sidebar-header {
+    font-weight: bold;
+    padding: 15px 0;
+}
+
+.sidebar-divider {
+    height: 15px;
+    display: block;
+}
+
+.full-width {
+    width: 100%;
+}
+
 .set-item-info {
-    padding: 10px 40px 10px 20px;
+    position: relative;
+    padding: 10px 40px 10px 0;
     border-bottom: 1px solid #464646
 }
 
-.beta-info {
-    float: right;
+.remove-set-item {
+    background: transparent;
+    color: rgb(255, 100, 100);
+    border: none;
+}
+
+.remove-set-item:hover {
+    cursor: pointer;
 }
 
 .font-sm {
     font-size: 10px;
 }
 
-.full-width {
-    width: 100%;
+.align-right {
+    text-align: right;
+}
+
+.align-center {
+    text-align: center;
+}
+
+.align-left {
+    text-align: left;
+}
+
+.color-red {
+    color:rgb(255, 94, 94);
+}
+
+.side-scroll {
+    overflow-x: auto;
+}
+
+.portfolio-card {
+    background-color: #252525;
+    padding: 10px;
+    border: 1px solid #3f3f3f;
+}
+
+.portfolio-card th {
+    color: #ccc;
+}
+
+.card-item {
+    background-color: #333333;
+    margin: 0 4px;
+    border-radius: 8px;
+    border: 1px solid #3f3f3f;
+}
+
+.tr-spacer {
+    height: 30px;
+    border: 0;
 }

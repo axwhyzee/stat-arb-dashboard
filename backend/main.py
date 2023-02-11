@@ -45,18 +45,22 @@ pips = {
     'USDCHF': 0.0001,
     'USDJPY': 0.01
 }
+prices = {'AUDCAD':0,'AUDCHF':0,'AUDJPY':0,'AUDNZD':0,'AUDUSD':0,'CADCHF':0,'CADJPY':0,'CHFJPY':0,'EURAUD':0,'EURCAD':0,'EURCHF':0,'EURGBP':0,'EURJPY':0,'EURNZD':0,'EURUSD':0,'GBPAUD':0,'GBPCAD':0,'GBPCHF':0,'GBPJPY':0,'GBPNZD':0,'GBPUSD':0,'NZDCAD':0,'NZDCHF':0,'NZDJPY':0,'NZDUSD':0,'USDCAD':0,'USDCHF':0,'USDJPY':0}
 
-print('[.] Establishing connection')
 TOKEN = 'ff6efd1deca512f4db9d4e0594040b083ddf3cda'
 CON = None
 PREV_CON_TIME = 0
-CON_INTERVAL = 60 * 5 # 5 mins
+CON_INTERVAL = 60 * 30 # can only request to connect every 30 mins
+
+PREV_QUERY_TIME = 0
+QUERY_INTERVAL = 60 * 5 # will only update FXCM price data every 5 mins
 
 async def connect():
     global PREV_CON_TIME, CON
     if time.time() - PREV_CON_TIME > CON_INTERVAL:
         PREV_CON_TIME = time.time()
     
+        print('[.] Establishing connection')
         try:
             CON = await fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
             print('[+] Connected')
@@ -68,17 +72,24 @@ async def connect():
     return False
 
 
-async def get_price(symbol: str):
+async def fetch_price(symbol: str):
+    global PREV_QUERY_TIME
     if not CON:
-        if not connect():
+        connected = await connect()
+        if not connected:
             return 0
 
-    if symbol[3] != '/':
-        symbol = symbol[:3] + '/' + symbol[3:]
-    try:
-        return await float(CON.get_candles(symbol, period='m1', number=1)['bidclose'])
-    except:
-        return 0
+    if time.time() - PREV_QUERY_TIME > QUERY_INTERVAL:
+        PREV_QUERY_TIME = int(time.time())
+        
+        if symbol[3] != '/':
+            symbol = symbol[:3] + '/' + symbol[3:]
+        try:
+            prices[symbol] = await float(CON.get_candles(symbol, period='m1', number=1)['bidclose'])
+        except:
+            pass
+
+    return prices[symbol]
 
 
 @app.get('/')
@@ -87,14 +98,14 @@ def read_root():
 
 
 @app.get('/spread/')
-async def calc_spread(pairs: Union[List[str], None] = Query(default=None),  
-                      betas: Union[List[float], None] = Query(default=None)):
+async def get_spread(pairs: Union[List[str], None] = Query(default=None),  
+                     betas: Union[List[float], None] = Query(default=None)):
     
     response = {}
 
     prices = []
     for pair in pairs:
-        price = await get_price(pair)
+        price = await fetch_price(pair)
         prices.append(price/pips[pair])
 
     betas = np.array(betas)
@@ -112,6 +123,21 @@ async def calc_spread(pairs: Union[List[str], None] = Query(default=None),
     
     return response
 
+@app.get('/price/')
+async def get_price(symbol: str):
+    return await fetch_price(symbol)
+
+@app.get('/all/')
+async def get_all_prices():
+    global PREV_QUERY_TIME
+    if time.time() - PREV_QUERY_TIME > QUERY_INTERVAL:
+        for pair in prices:
+            await fetch_price(pair)
+
+        PREV_QUERY_TIME = int(time.time())
+        
+    return prices
+    
 
 @app.get('/close/')
 def close():
