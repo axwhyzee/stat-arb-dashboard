@@ -10,6 +10,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
+    # allow_credentials=True, # if credentials allowed, then cannot allow all origins
     allow_methods=['*'],
     allow_headers=['*'],
 )
@@ -47,30 +48,41 @@ pips = {
 
 print('[.] Establishing connection')
 TOKEN = 'ff6efd1deca512f4db9d4e0594040b083ddf3cda'
-CON = fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
-print('[+] Connected')
+CON = None
 
 
-def get_price(symbol: str):
+async def connect():
+    try:
+        CON = await fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
+        print('[+] Connected')
+    except:
+        print('Can\'t connect to FXCM server')
+
+
+async def get_price(symbol: str):
+    if not CON:
+        return 0
+        
     if symbol[3] != '/':
         symbol = symbol[:3] + '/' + symbol[3:]
     try:
-        return float(CON.get_candles(symbol, period='m1', number=1)['bidclose'])
+        return await float(CON.get_candles(symbol, period='m1', number=1)['bidclose'])
     except:
         return -1
 
+
 @app.get('/')
 def read_root():
-    return 'http://127.0.0.1:8000/spread/?pairs=AUDUSD&pairs=CADCHF&betas=1&betas=-4.0686013955488303'
+    return '/spread/?pairs=AUDUSD&pairs=CADCHF&betas=1&betas=-4.0686013955488303'
 
 
 @app.get('/spread/')
-def calc_spread(pairs: Union[List[str], None] = Query(default=None),  
-                betas: Union[List[float], None] = Query(default=None)):
+async def calc_spread(pairs: Union[List[str], None] = Query(default=None),  
+                      betas: Union[List[float], None] = Query(default=None)):
     
     response = {}
 
-    prices = np.array([get_price(pair)/pips[pair] for pair in pairs])
+    prices = await np.array([get_price(pair)/pips[pair] for pair in pairs])
     betas = np.array(betas)
     spread = np.dot(betas, prices.T)
 
