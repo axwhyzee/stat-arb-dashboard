@@ -62,13 +62,13 @@ async def connect():
 async def get_price(symbol: str):
     if not CON:
         return 0
-        
+
     if symbol[3] != '/':
         symbol = symbol[:3] + '/' + symbol[3:]
     try:
         return await float(CON.get_candles(symbol, period='m1', number=1)['bidclose'])
     except:
-        return -1
+        return 0
 
 
 @app.get('/')
@@ -82,9 +82,13 @@ async def calc_spread(pairs: Union[List[str], None] = Query(default=None),
     
     response = {}
 
-    prices = await np.array([get_price(pair)/pips[pair] for pair in pairs])
+    prices = []
+    for pair in pairs:
+        price = await get_price(pair)
+        prices.append(price/pips[pair])
+
     betas = np.array(betas)
-    spread = np.dot(betas, prices.T)
+    spread = np.dot(betas, np.array(prices).T)
 
     response['datetime'] = time.strftime("%H:%M:%S", time.localtime())
     response['Y'] = pairs[0]
