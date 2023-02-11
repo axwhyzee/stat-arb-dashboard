@@ -49,19 +49,29 @@ pips = {
 print('[.] Establishing connection')
 TOKEN = 'ff6efd1deca512f4db9d4e0594040b083ddf3cda'
 CON = None
-
+PREV_CON_TIME = 0
+CON_INTERVAL = 60 * 5 # 5 mins
 
 async def connect():
-    try:
-        CON = await fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
-        print('[+] Connected')
-    except:
-        print('Can\'t connect to FXCM server')
+    global PREV_CON_TIME, CON
+    if time.time() - PREV_CON_TIME > CON_INTERVAL:
+        PREV_CON_TIME = time.time()
+    
+        try:
+            CON = await fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
+            print('[+] Connected')
+            return True
+        except:
+            print('Can\'t connect to FXCM server')
+            return False
+
+    return False
 
 
 async def get_price(symbol: str):
     if not CON:
-        return 0
+        if not connect():
+            return 0
 
     if symbol[3] != '/':
         symbol = symbol[:3] + '/' + symbol[3:]
