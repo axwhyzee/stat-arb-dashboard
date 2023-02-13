@@ -56,39 +56,34 @@ CON_INTERVAL = 60 * 30 # can only request to connect every 30 mins
 PREV_QUERY_TIME = 0
 QUERY_INTERVAL = 60 * 5 # will only update FXCM price data every 5 mins
 
-async def connect():
+def connect():
     global PREV_CON_TIME, CON
     if time.time() - PREV_CON_TIME > CON_INTERVAL:
         PREV_CON_TIME = time.time()
     
         print('[.] Establishing connection')
         try:
-            CON = await fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
+            CON = fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
             print('[+] Connected')
             return True
-        except:
-            print('Can\'t connect to FXCM server')
+        except Exception as e:
+            print('Can\'t connect to FXCM server', e)
             return False
 
     return False
 
 
-async def fetch_price(symbol: str):
+def fetch_price(symbol: str):
     global PREV_QUERY_TIME
     if not CON:
-        connected = await connect()
+        connected = connect()
         if not connected:
             return 0
 
-    if time.time() - PREV_QUERY_TIME > QUERY_INTERVAL:
-        PREV_QUERY_TIME = int(time.time())
-        
-        if symbol[3] != '/':
-            symbol = symbol[:3] + '/' + symbol[3:]
-        try:
-            prices[symbol] = await float(CON.get_candles(symbol, period='m1', number=1)['bidclose'])
-        except:
-            pass
+    try:
+        prices[symbol] = float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period='m1', number=1)['bidclose'])
+    except:
+        pass
 
     return prices[symbol]
 
@@ -99,14 +94,14 @@ def read_root():
 
 
 @app.get('/spread/')
-async def get_spread(pairs: Union[List[str], None] = Query(default=None),  
+def get_spread(pairs: Union[List[str], None] = Query(default=None),  
                      betas: Union[List[float], None] = Query(default=None)):
     
     response = {}
 
     prices = []
     for pair in pairs:
-        price = await fetch_price(pair)
+        price = fetch_price(pair)
         prices.append(price/pips[pair])
 
     betas = np.array(betas)
@@ -129,15 +124,23 @@ async def get_price(symbol: str):
     return await fetch_price(symbol)
 
 @app.get('/all/')
-async def get_all_prices():
+def get_all_prices():
     global PREV_QUERY_TIME
+    
     if time.time() - PREV_QUERY_TIME > QUERY_INTERVAL:
-        for pair in prices:
-            await fetch_price(pair)
+        for pair in pips:
+            fetch_price(pair)
 
         PREV_QUERY_TIME = int(time.time())
         
     return prices
+
+@app.get('/reconnect/')
+async def attempt_reconnect():
+    global PREV_CON_TIME
+
+    PREV_CON_TIME = 0
+    return {'Status': connect()}
 
 
 @app.get('/connect/last')
