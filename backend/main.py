@@ -155,9 +155,9 @@ def set_interval():
 
         prices_copy = prices.copy()
         prices_copy['datetime'] = str(PREV_QUERY_TIME)
-        prune()
 
         print('Inserted ID:', insert_doc(prices_copy))
+        prune()
 
     time.sleep(QUERY_INTERVAL // 2)
     set_interval()
