@@ -20,12 +20,12 @@ def insert_doc(doc):
     return inserted_id
 
 def find_all():
-    cursor = collection.find({}, {'_id':0}).sort('datetime', -1)
+    cursor = collection.find({}, {'_id':0}).sort('datetime', 1)
     return list(cursor)
 
 def find_pair(pair):
     res = []
-    cursor = collection.find({}).sort('datetime', -1)
+    cursor = collection.find({}).sort('datetime', 1)
     
     for doc in cursor:
         res.append([doc['datetime'], doc[pair]])
