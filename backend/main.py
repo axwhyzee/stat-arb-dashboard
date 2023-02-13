@@ -29,6 +29,7 @@ PREV_QUERY_TIME = 0
 QUERY_INTERVAL = 60 * 60 # number of seconds in h1
 
 last_db_record = find_last()
+print(find_last())
 if last_db_record:
     PREV_QUERY_TIME = int(last_db_record['datetime'])
 
@@ -107,7 +108,7 @@ def get_all_prices():
 
 @app.get('/historical/')
 def get_historical_prices():
-    return find_all()[-100:]
+    return find_all()[-1000:]
 
 @app.get('/reconnect/')
 async def attempt_reconnect():
@@ -134,9 +135,6 @@ def close():
 # uvicorn main:app --host 0.0.0.0 --port 10000
 # uvicorn main:app --reload
 
-# http://127.0.0.1:8000/spread/?pairs=AUDUSD&pairs=CADCHF&betas=1&betas=-4.0686013955488303
-
-
 # +-----------------------+
 # | Multi-Threading Query |
 # +-----------------------+
@@ -149,7 +147,7 @@ def set_interval():
     
     if time.time() // QUERY_INTERVAL > PREV_QUERY_TIME // QUERY_INTERVAL:
         print('Updating prices ...')
-        PREV_QUERY_TIME = time.time() // QUERY_INTERVAL * QUERY_INTERVAL
+        PREV_QUERY_TIME = int(time.time()) // QUERY_INTERVAL * QUERY_INTERVAL
         for pair in pips:
             fetch_price(pair)
 
