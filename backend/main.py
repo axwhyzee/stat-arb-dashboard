@@ -28,8 +28,7 @@ FXCM_CANDLE_PERIOD = 'H1'
 PREV_QUERY_TIME = 0
 QUERY_INTERVAL = 60 * 60 # number of seconds in h1
 
-last_db_record = find_last()
-print(find_last())
+last_db_record = find_last('prices')
 if last_db_record:
     PREV_QUERY_TIME = int(last_db_record['datetime'])
 
@@ -108,7 +107,7 @@ def get_all_prices():
 
 @app.get('/historical/')
 def get_historical_prices():
-    return find_all()[-1000:]
+    return find_all('prices')[-1000:]
 
 @app.get('/reconnect/')
 async def attempt_reconnect():
@@ -154,8 +153,7 @@ def set_interval():
         prices_copy = prices.copy()
         prices_copy['datetime'] = str(PREV_QUERY_TIME)
 
-        print('Inserted ID:', insert_doc(prices_copy))
-        prune()
+        print('Inserted ID:', insert_doc('prices', prices_copy))
 
     time.sleep(QUERY_INTERVAL // 2)
     set_interval()
