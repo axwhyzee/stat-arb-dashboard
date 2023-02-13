@@ -107,7 +107,7 @@ def get_all_prices():
 
 @app.get('/historical/')
 def get_historical_prices():
-    return find_all('prices')[-1000:]
+    return {'prices': find_all('prices')[-1000:]}
 
 @app.get('/reconnect/')
 async def attempt_reconnect():
