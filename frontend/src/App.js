@@ -7,11 +7,11 @@ import Card from './Card';
 import Graph from './Graph';
 import Spinner from './Spinner';
 import Sidebar from './Sidebar';
-import { getPip, roundOff, calcSpread, getPrice, getPrices, getHistorical } from './helper';
+import { getPip, roundOff, calcSpread, getPrice, getPrices, getHistorical, isEmptyObj } from './helper';
 
 
 const App = () => {
-    const queryInterval = 1000 * 60 * 5; // 5 mins in ms
+    const queryInterval = 1000 * 60 * 30; // 30 mins in ms
     const [loadingPrices, setLoadingPrices] = useState(false);
     const [updateDatetime, setUpdateDatetime] = useState(new Date().toLocaleString());
     const [intervalState, setIntervalState] = useState();
@@ -70,7 +70,7 @@ const App = () => {
         console.log('[Updating] App > updatePrices()');
         const updatedPrices = await getPrices();
 
-        setPrices(updatedPrices);
+        if (!isEmptyObj(updatePrices)) setPrices(updatedPrices);
         setUpdateDatetime(new Date().toLocaleString());
     }
 

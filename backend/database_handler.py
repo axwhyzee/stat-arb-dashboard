@@ -18,12 +18,12 @@ def insert_doc(doc):
     return inserted_id
 
 def find_all():
-    cursor = collection.find()
+    cursor = collection.find({}, {'_id':0})
     return list(cursor)
 
 def find_pair(pair):
     res = []
-    cursor = collection.find()
+    cursor = collection.find({})
     
     for doc in cursor:
         res.append([doc['datetime'], doc[pair]])
@@ -32,7 +32,11 @@ def find_pair(pair):
 
 def find_last():
     cursor = collection.find().sort('datetime', -1)
-    return cursor[0]
+
+    data = cursor[0]
+    del data['_id']
+
+    return data
 
 def delete_many(dates):
     deleted = collection.delete_many({'datetime': {'$in': dates}})

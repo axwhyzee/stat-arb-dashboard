@@ -10,6 +10,10 @@ export function roundOff(x, dp) {
     return Math.round(x * base) / base;
 }
 
+export function isEmptyObj(obj) {
+    return Object.keys(obj).length === 0;
+}
+
 export function getPip(pair) {
     if (pips.has(pair)) return pips.get(pair);
     if (pair.substring(3) === 'JPY') {
@@ -54,9 +58,9 @@ export async function getPrices() {
 
         prices = data;
         prevPriceQuery = now;
+        return prices;
     }
-
-    return prices;
+    return {}
 }
 
 export async function getHistorical() {

@@ -33,7 +33,6 @@ if last_db_record:
     PREV_QUERY_TIME = int(last_db_record['datetime'])
 
     del last_db_record['datetime']
-    del last_db_record['_id']
     prices = last_db_record
 
 
@@ -154,10 +153,10 @@ def set_interval():
         for pair in pips:
             fetch_price(pair)
 
-    prices_copy = prices.copy()
-    prices_copy['datetime'] = str(PREV_QUERY_TIME)
+        prices_copy = prices.copy()
+        prices_copy['datetime'] = str(PREV_QUERY_TIME)
 
-    print('Inserted ID:', insert_doc(prices_copy))
+        print('Inserted ID:', insert_doc(prices_copy))
 
     time.sleep(QUERY_INTERVAL // 2)
     set_interval()
