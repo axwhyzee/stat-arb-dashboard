@@ -149,7 +149,7 @@ def set_interval():
     
     if time.time() // QUERY_INTERVAL > PREV_QUERY_TIME // QUERY_INTERVAL:
         print('Updating prices ...')
-        PREV_QUERY_TIME += QUERY_INTERVAL
+        PREV_QUERY_TIME = time.time() // QUERY_INTERVAL
         for pair in pips:
             fetch_price(pair)
 
