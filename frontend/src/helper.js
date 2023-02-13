@@ -63,8 +63,8 @@ export async function getPrices() {
     return {}
 }
 
-export async function getHistorical() {
+export async function getHistorical(idx) {
     console.log('fetching historical ...');
-    const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/');
+    const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/?i=' + idx);
     return await response.json();
 }

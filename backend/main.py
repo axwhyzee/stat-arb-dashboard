@@ -28,7 +28,10 @@ FXCM_CANDLE_PERIOD = 'H1'
 PREV_QUERY_TIME = 0
 QUERY_INTERVAL = 60 * 60 # number of seconds in h1
 
-last_db_record = find_last('prices')
+init_db()
+
+last_db_record = find_last(f'prices_{num_collections()}')
+print(last_db_record)
 if last_db_record:
     PREV_QUERY_TIME = int(last_db_record['datetime'])
 
@@ -71,7 +74,7 @@ def fetch_price(symbol: str):
             return 0
 
     try:
-        prices[symbol] = round(float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period=FXCM_CANDLE_PERIOD, number=1)['bidclose']), 6)
+        prices[symbol] = round(float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period=FXCM_CANDLE_PERIOD, number=1)['bidclose']) / pips[symbol], 6)
     except:
         pass
 
@@ -101,13 +104,13 @@ async def get_price(symbol: str):
 
 
 @app.get('/all/')
-def get_all_prices():
+def get_prices():
     return prices
 
 
 @app.get('/historical/')
-def get_historical_prices():
-    return find_all('prices')[-1000:]
+def get_historical_prices(i: int = 1):
+    return {'prices': find_all(f'prices_{i}'), 'next': i+1 if i<num_collections() else 0}
 
 @app.get('/reconnect/')
 async def attempt_reconnect():
@@ -123,7 +126,7 @@ async def get_last_connect():
         'Last query': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_QUERY_TIME), '%d-%m-%Y %H:%M'),
         'Last connection attempt': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_CON_TIME), '%d-%m-%Y %H:%M')
     }
-    
+
 
 @app.get('/close/')
 def close():
@@ -151,9 +154,9 @@ def set_interval():
             fetch_price(pair)
 
         prices_copy = prices.copy()
-        prices_copy['datetime'] = str(PREV_QUERY_TIME)
+        prices_copy['datetime'] = PREV_QUERY_TIME
 
-        print('Inserted ID:', insert_doc('prices', prices_copy))
+        print('Inserted ID:', insert_doc(prices_copy))
 
     time.sleep(QUERY_INTERVAL // 2)
     set_interval()

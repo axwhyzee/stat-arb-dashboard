@@ -12,6 +12,7 @@ import { getPip, roundOff, calcSpread, getPrice, getPrices, getHistorical, isEmp
 
 const App = () => {
     const queryInterval = 1000 * 60 * 30; // 30 mins in ms
+    const [chain, setChain] = useState();
     const [loadingPrices, setLoadingPrices] = useState(false);
     const [updateDatetime, setUpdateDatetime] = useState(new Date().toLocaleString());
     const [intervalState, setIntervalState] = useState();
@@ -42,11 +43,10 @@ const App = () => {
         }
 
         fetchPrices();
+        console.log(prices);
         setIntervalState(interval);
 
-        console.log('[.] Fetching historical data ...')
-        setHistoricalData(getHistorical())
-        console.log('[+] Fetch complete')
+        queryChain(1);
 
         return () => clearInterval(intervalState); // cleanup on unmount
     }, []);
@@ -65,12 +65,20 @@ const App = () => {
         setSpreads(cloneSpreads);
     }, [prices]);
 
+    async function queryChain(idx) {
+        const dataBlock = await getHistorical(idx);
+
+        idx = dataBlock['next'];
+        setHistoricalData(historicalData.concat(dataBlock['prices']));
+        if (idx) queryChain(idx); // continue the chain if there is still data
+    }
+
     // interval function that queries for new prices every <query_interval>
     async function updatePrices() {
-        console.log('[Updating] App > updatePrices()');
+        console.log('[INTERVAL] App > updatePrices()');
         const updatedPrices = await getPrices();
 
-        if (!isEmptyObj(updatePrices)) setPrices(updatedPrices);
+        if (!isEmptyObj(updatedPrices)) setPrices(updatedPrices);
         setUpdateDatetime(new Date().toLocaleString());
     }
 
@@ -115,7 +123,6 @@ const App = () => {
     }
 
     function spreadFromHistorical(active) {
-        console.log('[] App > spreadFromHistorical', portfolios[active].map((pair) => (pair.pair)));
         const pairs = portfolios[active].map((ele) => ([ele.pair, ele.beta]));
         const res = [];
 
@@ -142,7 +149,7 @@ const App = () => {
                 {
                     active !== -1 ?
                         (<Graph
-                            spreadData={spreadFromHistorical(active)}
+                            data={spreadFromHistorical(active)}
                             entry={portfolios[active].map((obj) => (obj.entry / getPip(obj.pair) * obj.beta)).reduce(function (a, b) { return a + b }, 0)}
                             current={spreads[active]} />)
                         :

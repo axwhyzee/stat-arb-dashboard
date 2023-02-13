@@ -3,11 +3,9 @@ import Spinner from './Spinner';
 import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const Graph = ({ spreadData, entry, current }) => {
-    const [data, setData] = useState([]);
+const Graph = ({ data, entry, current }) => {
     const [resize, setResize] = useState();
     const [loadingGraph, setLoadingGraph] = useState(false);
-
     const svgRef = useRef();
     const svg = d3.select(svgRef.current);
     const shiftY = 95;
@@ -26,15 +24,10 @@ const Graph = ({ spreadData, entry, current }) => {
     }, []);
 
     useEffect(() => {
-        setData(spreadData);
-    }, [spreadData]);
-
-
-    useEffect(() => {
         if (!data.length) return;
 
         setLoadingGraph(true);
-        svg.selectAll("*").remove();
+        svg.selectAll('*').remove();
 
         // wait for sidebar transition to finish
         const timeout = setTimeout(() => {
@@ -78,42 +71,42 @@ const Graph = ({ spreadData, entry, current }) => {
                 .attr('d', (d) => lineGenerator(d))
                 .attr('fill', 'none')
                 .attr('stroke', '#b8e691')
-                .attr("stroke-width", 0.2)
-                .attr("transform", "translate(" + shiftX + ", " + shiftY2 + ")");
+                .attr('stroke-width', 0.2)
+                .attr('transform', 'translate(' + shiftX + ',' + shiftY2 + ')');
 
             svg
-                .append("g")
+                .append('g')
                 .attr('class', 'x axis')
-                .attr("transform", "translate(" + shiftX + "," + (height - 20) + ")")
+                .attr('transform', 'translate(' + shiftX + ',' + (height - 20) + ')')
                 .call(xAxis);
 
             svg
-                .append("g")
+                .append('g')
                 .attr('class', 'y axis')
-                .attr("transform", "translate(" + shiftX + " , " + shiftY2 + ")")
+                .attr('transform', 'translate(' + shiftX + ',' + shiftY2 + ')')
                 .call(yAxis);
 
             // entry spread
             svg
                 .append('line')
-                .attr("x1", xScale(data[0][0]))
-                .attr("y1", yScale(entry))
-                .attr("x2", xScale(data[data.length - 1][0]))
-                .attr("y2", yScale(entry))
-                .attr("stroke", "#d15a54")
-                .attr("stroke-width", .8)
-                .attr("transform", "translate(" + shiftX + ", " + shiftY2 + ")");
+                .attr('x1', xScale(data[0][0]))
+                .attr('y1', yScale(entry))
+                .attr('x2', xScale(data[data.length - 1][0]))
+                .attr('y2', yScale(entry))
+                .attr('stroke', '#d15a54')
+                .attr('stroke-width', .8)
+                .attr('transform', 'translate(' + shiftX + ', ' + shiftY2 + ')');
 
             // current spread
             svg
                 .append('line')
-                .attr("x1", xScale(data[0][0]))
-                .attr("y1", yScale(current))
-                .attr("x2", xScale(data[data.length - 1][0]))
-                .attr("y2", yScale(current))
-                .attr("stroke", "#bd7d46")
-                .attr("stroke-width", .8)
-                .attr("transform", "translate(" + shiftX + ", " + shiftY2 + ")")
+                .attr('x1', xScale(data[0][0]))
+                .attr('y1', yScale(current))
+                .attr('x2', xScale(data[data.length - 1][0]))
+                .attr('y2', yScale(current))
+                .attr('stroke', '#bd7d46')
+                .attr('stroke-width', .8)
+                .attr('transform', 'translate(' + shiftX + ', ' + shiftY2 + ')')
                 .attr('onload', function () {
                     setLoadingGraph(false);
                 });
