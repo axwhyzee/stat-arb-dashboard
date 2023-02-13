@@ -1,36 +1,16 @@
 import React from "react";
 import SetItem from './SetItem';
 import Form from './Form';
-import { roundOff, calcSpread, getPrice } from './helper';
+import { calcSpread, getPrice } from './helper';
 import { useEffect, useState } from 'react';
 
-const API_URL = 'https://stat-arbitrage-dashboard.onrender.com/spread/';
-
-const Sidebar = ({ id, data, editPortfolio }) => {
+const Sidebar = ({ id, spread, data, editPortfolio }) => {
     const [pairs, setPairs] = useState(data);
-    const [spread, setSpread] = useState(0);
     const [isExpanded, setIsExpanded] = useState(false);
-
-    const getSpread = async () => {
-        let argPairs = '';
-        let argBetas = '';
-
-        if (pairs.length === 0) return;
-
-        for (const item of pairs) {
-            argPairs += '&pairs=' + item.pair;
-            argBetas += '&betas=' + item.beta;
-        }
-
-        const response = await fetch(`${API_URL}?${argPairs}${argBetas}`);
-        const data = await response.json();
-
-        setSpread(data.spread);
-    }
+    const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
         if (id !== -1) {
-            getSpread();
             setPairs(data);
         }
     }, [data, id])
@@ -50,10 +30,11 @@ const Sidebar = ({ id, data, editPortfolio }) => {
     async function addPair(pair, entry, beta) {
         // data validation
         // 1) check for empty inputs
-        if (!pair || !entry || !beta) {
-            console.log('Empty input');
+        if (!pair || !beta) {
+            setErrorMsg('Missing required inputs')
             return;
         }
+        if (!entry) entry = await getPrice(pair);
 
         let newPairs;
         const betaF = parseFloat(beta);
@@ -61,17 +42,19 @@ const Sidebar = ({ id, data, editPortfolio }) => {
 
         // 2) check data type of beta & entry
         if (isNaN(beta) || betaF != beta || isNaN(entry) || entryF != entry) {
-            console.log('Invalid data type');
+            setErrorMsg('Invalid number');
             return;
         }
 
         // 3) check if pair already exists
         for (const item of pairs) {
             if (item.pair === pair) {
-                console.log('Pair already exists');
+                setErrorMsg('Pair already exists');
                 return;
             }
         }
+
+        setErrorMsg('');
 
         newPairs = [...pairs, { 'pair': pair, 'entry': entry, 'price': await getPrice(pair), 'beta': beta }];
         editPortfolio(id, newPairs);
@@ -84,7 +67,8 @@ const Sidebar = ({ id, data, editPortfolio }) => {
                 id !== -1
                     ? (
                         <>
-                            <Form addPair={addPair} />
+                            <Form addPair={addPair} errorMsg={errorMsg} />
+
                             <div className='sidebar-wrapper'>
                                 <div className='sidebar-header'>PAIRS</div>
                                 <table className='full-width'>
@@ -108,11 +92,11 @@ const Sidebar = ({ id, data, editPortfolio }) => {
                                     <tbody>
                                         <tr className='font-sm'>
                                             <td>Entry</td>
-                                            <td className='align-right'>{roundOff(calcSpread(pairs.map((pair) => [pair.pair, pair.entry, pair.beta])), 4)}</td>
+                                            <td className='align-right'>{calcSpread(pairs.map((pair) => [pair.pair, pair.entry, pair.beta]))}</td>
                                         </tr>
                                         <tr className='font-sm'>
                                             <td>Current</td>
-                                            <td className='align-right'>{roundOff(spread, 4)}</td>
+                                            <td className='align-right'>{spread}</td>
                                         </tr>
                                     </tbody>
                                 </table>

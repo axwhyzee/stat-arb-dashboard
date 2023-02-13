@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from 'react';
 
-const Form = ({ addPair }) => {
+const Form = ({ addPair, errorMsg }) => {
     const [pair, setPair] = useState();
     const [entry, setEntry] = useState()
     const [beta, setBeta] = useState()
@@ -13,8 +13,8 @@ const Form = ({ addPair }) => {
             <div>
                 <section className='row'>
                     <div className='p-1 col-6'>
-                        <label className='input-label' htmlFor='pair'>Pair</label>
-                        <select name='pair' className='user-input color-grey font-sm' onChange={e => setPair(e.target.value)}>
+                        <label className='input-label' htmlFor='pair'>PAIR *</label>
+                        <select name='pair' className='user-input color-grey font-xs' onChange={e => setPair(e.target.value)}>
                             <option value=''>-----</option>
                             <option value='AUDCAD'>AUDCAD</option>
                             <option value='AUDCHF'>AUDCHF</option>
@@ -47,19 +47,21 @@ const Form = ({ addPair }) => {
                         </select>
                     </div>
                     <div className='p-1 col-6'>
-                        <label className='input-label' htmlFor='beta'>Beta</label>
-                        <input name='beta' className='user-input color-grey font-sm' placeholder='Beta value' onChange={e => setBeta(e.target.value)} />
+                        <label className='input-label' htmlFor='beta'>BETA *</label>
+                        <input name='beta' className='user-input color-grey font-xs' placeholder='Beta value' onChange={e => setBeta(e.target.value)} />
                     </div>
                 </section>
                 <section className='p-1'>
-                    <label className='input-label' htmlFor='entry'>Entry</label>
-                    <input name='entry' className='user-input color-grey font-sm' onChange={e => setEntry(e.target.value)} />
+                    <label className='input-label' htmlFor='entry'>ENTRY</label>
+                    <input name='entry' className='user-input color-grey font-xs' onChange={e => setEntry(e.target.value)} />
                 </section>
-                <section>
-                    <div className='p-1'>
-                        <button class='btn-add font-sm' onClick={() => addPair(pair, entry, beta)}>ADD TO PORTFOLIO</button>
-                    </div>
+                <section className='pl-1'>
+                    <div class='sidebar-error-msg font-sm'>{errorMsg}</div>
                 </section>
+                <section className='p-1'>
+                    <button class='btn-add font-sm' onClick={() => addPair(pair, entry, beta)}>ADD TO PORTFOLIO</button>
+                </section>
+
             </div>
         </form>
     )

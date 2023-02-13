@@ -5,7 +5,7 @@ const CardItem = ({ item }) => {
     return (
         <div className='card-item'>
             <div className='font-md'><b>{item.pair}</b></div>
-            <div className='font-sm align-center color-red'>{roundOff(item.beta, 4)}</div>
+            <div className='font-sm align-center color-green'>{roundOff(item.beta, 4)}</div>
         </div>
     )
 }

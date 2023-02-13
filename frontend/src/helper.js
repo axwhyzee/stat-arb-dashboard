@@ -34,7 +34,6 @@ export function calcSpread(ppb) {
 
 export async function getPrice(pair) {
     const now = Date.now();
-    console.log(pair);
     if (now - prevPriceQuery > queryInterval) {
         const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/all/');
         const data = await response.json();
@@ -49,6 +48,7 @@ export async function getPrice(pair) {
 export async function getPrices() {
     const now = Date.now();
     if (now - prevPriceQuery > queryInterval) {
+        console.log('fetching prices ...');
         const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/all/');
         const data = await response.json();
 
@@ -57,4 +57,10 @@ export async function getPrices() {
     }
 
     return prices;
+}
+
+export async function getHistorical() {
+    console.log('fetching historical ...');
+    const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/');
+    return await response.json();
 }

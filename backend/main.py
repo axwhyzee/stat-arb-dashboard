@@ -1,7 +1,7 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Query
-from typing import List, Union
-import numpy as np
+from database_handler import *
+from fastapi import FastAPI
+import threading
 import datetime
 import fxcmpy
 import time
@@ -11,60 +11,52 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
-    # allow_credentials=True, # if credentials allowed, then cannot allow all origins
     allow_methods=['*'],
     allow_headers=['*'],
 )
 
-pips = {
-    'AUDCAD': 0.0001,
-    'AUDCHF': 0.0001,
-    'AUDJPY': 0.01,
-    'AUDNZD': 0.0001,
-    'AUDUSD': 0.0001,
-    'CADCHF': 0.0001,
-    'CADJPY': 0.01,
-    'CHFJPY': 0.01,
-    'EURAUD': 0.0001,
-    'EURCAD': 0.0001,
-    'EURCHF': 0.0001,
-    'EURGBP': 0.0001,
-    'EURJPY': 0.01,
-    'EURNZD': 0.0001,
-    'EURUSD': 0.0001,
-    'GBPAUD': 0.0001,
-    'GBPCAD': 0.0001,
-    'GBPCHF': 0.0001,
-    'GBPJPY': 0.01,
-    'GBPNZD': 0.0001,
-    'GBPUSD': 0.0001,
-    'NZDCAD': 0.0001,
-    'NZDCHF': 0.0001,
-    'NZDJPY': 0.01,
-    'NZDUSD': 0.0001,
-    'USDCAD': 0.0001,
-    'USDCHF': 0.0001,
-    'USDJPY': 0.01
-}
-prices = {'AUDCAD':0,'AUDCHF':0,'AUDJPY':0,'AUDNZD':0,'AUDUSD':0,'CADCHF':0,'CADJPY':0,'CHFJPY':0,'EURAUD':0,'EURCAD':0,'EURCHF':0,'EURGBP':0,'EURJPY':0,'EURNZD':0,'EURUSD':0,'GBPAUD':0,'GBPCAD':0,'GBPCHF':0,'GBPJPY':0,'GBPNZD':0,'GBPUSD':0,'NZDCAD':0,'NZDCHF':0,'NZDJPY':0,'NZDUSD':0,'USDCAD':0,'USDCHF':0,'USDJPY':0}
+pairs = ['AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF', 'CADJPY', 'CHFJPY', 'EURAUD', 'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY', 'EURNZD', 'EURUSD', 'GBPAUD', 'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPNZD', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY']
+pips = {pair:0.01 if pair[3:] == 'JPY' else 0.0001 for pair in pairs}
+prices = {pair:0 for pair in pairs}
 
 TOKEN = 'ff6efd1deca512f4db9d4e0594040b083ddf3cda'
 CON = None
 PREV_CON_TIME = 0
 CON_INTERVAL = 60 * 30 # can only request to connect every 30 mins
 
+FXCM_CANDLE_PERIOD = 'H1'
 PREV_QUERY_TIME = 0
-QUERY_INTERVAL = 60 * 5 # will only update FXCM price data every 5 mins
+QUERY_INTERVAL = 60 * 60 # number of seconds in h1
+
+last_db_record = find_last()
+if last_db_record:
+    PREV_QUERY_TIME = int(last_db_record['datetime'])
+
+    del last_db_record['datetime']
+    del last_db_record['_id']
+    prices = last_db_record
+
+
+# +------------------+
+# | Helper Functions |
+# +------------------+
+
+def epoch_to_datetime(epoch):
+    if type(epoch) == str:
+        epoch = int(epoch)
+
+    return datetime.datetime.fromtimestamp(epoch).strftime('%Y-%m-%d %H:%M')
+
 
 def connect():
     global PREV_CON_TIME, CON
     if time.time() - PREV_CON_TIME > CON_INTERVAL:
         PREV_CON_TIME = time.time()
     
-        print('[.] Establishing connection')
+        print('[.] Attempting to connect ...')
         try:
             CON = fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
-            print('[+] Connected')
+            print('[+] Connected to FXCM server')
             return True
         except Exception as e:
             print('Can\'t connect to FXCM server', e)
@@ -74,66 +66,49 @@ def connect():
 
 
 def fetch_price(symbol: str):
-    global PREV_QUERY_TIME
     if not CON:
         connected = connect()
         if not connected:
             return 0
 
     try:
-        prices[symbol] = float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period='m1', number=1)['bidclose'])
+        prices[symbol] = round(float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period=FXCM_CANDLE_PERIOD, number=1)['bidclose']), 6)
     except:
         pass
 
     return prices[symbol]
 
 
+# +---------------+
+# | API Endpoints |
+# +---------------+
+
 @app.get('/')
 def read_root():
-    return '/spread/?pairs=AUDUSD&pairs=CADCHF&betas=1&betas=-4.0686013955488303'
+    return {
+        'API base URL': 'https://stat-arbitrage-dashboard.onrender.com/',
+        'Get price of 1 pair': '/price/?symbol=',
+        'Get historical prices': '/historical/',
+        'Get all prices': '/all/',
+        'Reconnect to FXCM server': '/reconnect/',
+        'Get last query & connection datetimes': '/last/',
+        'Terminate connection with FXCM server': '/close/'
+    }
 
-
-@app.get('/spread/')
-def get_spread(pairs: Union[List[str], None] = Query(default=None),  
-                     betas: Union[List[float], None] = Query(default=None)):
-    
-    response = {}
-
-    prices = []
-    for pair in pairs:
-        price = fetch_price(pair)
-        prices.append(price/pips[pair])
-
-    betas = np.array(betas)
-    spread = np.dot(betas, np.array(prices).T)
-
-    response['datetime'] = time.strftime("%H:%M:%S", time.localtime())
-    response['Y'] = pairs[0]
-    response['X'] = pairs[1:]
-
-    for i in range(len(prices)):
-        response[pairs[i]] = round(prices[i], 2)
-
-    response['betas'] = [1,] + list(betas[1:])
-    response['spread'] = spread
-    
-    return response
 
 @app.get('/price/')
 async def get_price(symbol: str):
     return await fetch_price(symbol)
 
+
 @app.get('/all/')
 def get_all_prices():
-    global PREV_QUERY_TIME
-    
-    if time.time() - PREV_QUERY_TIME > QUERY_INTERVAL:
-        for pair in pips:
-            fetch_price(pair)
-
-        PREV_QUERY_TIME = int(time.time())
-        
     return prices
+
+
+@app.get('/historical/')
+def get_historical_prices():
+    return find_all()[-100:]
 
 @app.get('/reconnect/')
 async def attempt_reconnect():
@@ -143,18 +118,57 @@ async def attempt_reconnect():
     return {'Status': connect()}
 
 
-@app.get('/connect/last')
+@app.get('/last/')
 async def get_last_connect():
-    return datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_QUERY_TIME), '%d-%m-%Y %H:%M')
+    return {
+        'Last query': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_QUERY_TIME), '%d-%m-%Y %H:%M'),
+        'Last connection attempt': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_CON_TIME), '%d-%m-%Y %H:%M')
+    }
     
 
 @app.get('/close/')
 def close():
     CON.close()
-    return {'Response': 'Connection closed'}
+    return {'Connection': 'Terminated'}
 
 
 # uvicorn main:app --host 0.0.0.0 --port 10000
 # uvicorn main:app --reload
 
 # http://127.0.0.1:8000/spread/?pairs=AUDUSD&pairs=CADCHF&betas=1&betas=-4.0686013955488303
+
+
+# +-----------------------+
+# | Multi-Threading Query |
+# +-----------------------+
+
+def set_interval():
+    global PREV_QUERY_TIME
+
+    prices_copy = None
+    print('[INTERVAL]', epoch_to_datetime(time.time()))
+    
+    if time.time() // QUERY_INTERVAL > PREV_QUERY_TIME // QUERY_INTERVAL:
+        print('Updating prices ...')
+        PREV_QUERY_TIME += QUERY_INTERVAL
+        for pair in pips:
+            fetch_price(pair)
+
+    prices_copy = prices.copy()
+    prices_copy['datetime'] = str(PREV_QUERY_TIME)
+
+    print('Inserted ID:', insert_doc(prices_copy))
+
+    time.sleep(QUERY_INTERVAL // 2)
+    set_interval()
+
+# start thread
+print('+-----------------+')
+print('| MULTI-THREADING |')
+print('+-----------------+')
+print('RECURSION INTERVAL\t', QUERY_INTERVAL // 2, 'secs')
+print('REQUEST INTERVAL  \t', QUERY_INTERVAL, 'secs')
+print('PREV_QUERY_TIME   \t', epoch_to_datetime(PREV_QUERY_TIME))
+print()
+t = threading.Thread(target=set_interval)
+t.start()

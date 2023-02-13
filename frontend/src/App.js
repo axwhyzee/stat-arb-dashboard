@@ -1,20 +1,21 @@
 import './App.css';
-import * as d3 from "d3";
-import csvFile from './data.csv'
 
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 import Card from './Card';
 import Graph from './Graph';
+import Spinner from './Spinner';
 import Sidebar from './Sidebar';
-import { getPip, calcSpread, getPrice, getPrices } from './helper';
+import { getPip, roundOff, calcSpread, getPrice, getPrices, getHistorical } from './helper';
 
 
 const App = () => {
     const queryInterval = 1000 * 60 * 5; // 5 mins in ms
+    const [loadingPrices, setLoadingPrices] = useState(false);
+    const [updateDatetime, setUpdateDatetime] = useState(new Date().toLocaleString());
     const [intervalState, setIntervalState] = useState();
-    const [csvData, setCsvData] = useState([]);
+    const [historicalData, setHistoricalData] = useState([]);
     const [active, setActive] = useState(-1);
     const [spreads, setSpreads] = useState({});
     const [prices, setPrices] = useState({ 'AUDCAD': 0, 'AUDCHF': 0, 'AUDJPY': 0, 'AUDNZD': 0, 'AUDUSD': 0, 'CADCHF': 0, 'CADJPY': 0, 'CHFJPY': 0, 'EURAUD': 0, 'EURCAD': 0, 'EURCHF': 0, 'EURGBP': 0, 'EURJPY': 0, 'EURNZD': 0, 'EURUSD': 0, 'GBPAUD': 0, 'GBPCAD': 0, 'GBPCHF': 0, 'GBPJPY': 0, 'GBPNZD': 0, 'GBPUSD': 0, 'NZDCAD': 0, 'NZDCHF': 0, 'NZDJPY': 0, 'NZDUSD': 0, 'USDCAD': 0, 'USDCHF': 0, 'USDJPY': 0 });
@@ -29,44 +30,57 @@ const App = () => {
         ]
     });
 
+    // initialization function - runs once on component mount
     useEffect(() => {
+        console.log('[Initialise]');
         const interval = setInterval(updatePrices, queryInterval);
-        updatePrices(); // run once immediately since setInterval runs only after interval
+
+        const fetchPrices = async () => {
+            setLoadingPrices(true);
+            await updatePrices(); // run once immediately since setInterval runs only after interval
+            setLoadingPrices(false);
+        }
+
+        fetchPrices();
         setIntervalState(interval);
 
-        d3.csv(csvFile).then(function (data) {
-            setCsvData(data);
-        });
+        console.log('[.] Fetching historical data ...')
+        setHistoricalData(getHistorical())
+        console.log('[+] Fetch complete')
 
         return () => clearInterval(intervalState); // cleanup on unmount
     }, []);
 
-    useEffect(() => {
+    // update all spread values on price updates
+    useMemo(() => {
         let spread;
         let cloneSpreads = {};
         for (const ID of Object.keys(portfolios)) {
             spread = 0;
             for (const item of portfolios[ID]) {
-                spread += prices[item.pair] * item.beta;
+                spread += prices[item.pair] / getPip(item.pair) * item.beta;
             }
-            cloneSpreads[ID] = spread;
+            cloneSpreads[ID] = roundOff(spread, 4);
         }
         setSpreads(cloneSpreads);
     }, [prices]);
 
+    // interval function that queries for new prices every <query_interval>
     async function updatePrices() {
-        console.log('Updating prices ...');
+        console.log('[Updating] App > updatePrices()');
         const updatedPrices = await getPrices();
-        console.log('Updated prices!');
+
         setPrices(updatedPrices);
+        setUpdateDatetime(new Date().toLocaleString());
     }
 
-    function addPortfolio() {
+    async function addPortfolio() {
         const ID = new Date().valueOf();
         const clonePortfolios = structuredClone(portfolios);
         const cloneSpreads = structuredClone(spreads);
+        const defaultPrice = await getPrice('EURUSD');
 
-        clonePortfolios[ID] = [{ 'pair': 'EURUSD', 'entry': 1.067, 'price': 1.067, 'beta': 1 }];
+        clonePortfolios[ID] = [{ 'pair': 'EURUSD', 'entry': defaultPrice, 'price': defaultPrice, 'beta': 1 }];
         cloneSpreads[ID] = calcSpread(clonePortfolios[ID].map((pair) => ([pair.pair, pair.price, pair.beta])));
 
         setSpreads(cloneSpreads);
@@ -101,6 +115,7 @@ const App = () => {
     }
 
     function spreadFromCSV(active) {
+        console.log('[] App > spreadFromCSV', portfolios[active].map((pair) => (pair.pair)));
         const pairs = portfolios[active].map((ele) => ([ele.pair, ele.beta]));
         const res = [];
 
@@ -112,7 +127,7 @@ const App = () => {
                 spread += row[pair[0]] * pair[1];
             }
 
-            temp.push(spread);
+            temp.push(roundOff(spread, 4));
             res.push(temp);
         }
 
@@ -121,7 +136,7 @@ const App = () => {
 
     return (
         <main className='color-grey'>
-            <Sidebar id={active} data={(active in portfolios) ? portfolios[active] : []} editPortfolio={editPortfolio} />
+            <Sidebar id={active} spread={spreads[active]} data={(active in portfolios) ? portfolios[active] : []} editPortfolio={editPortfolio} />
 
             <div className='main-wrapper'>
                 {
@@ -129,23 +144,35 @@ const App = () => {
                         (<Graph
                             spreadData={spreadFromCSV(active)}
                             entry={portfolios[active].map((obj) => (obj.entry / getPip(obj.pair) * obj.beta)).reduce(function (a, b) { return a + b }, 0)}
-                            current={portfolios[active].map((obj) => (obj.price / getPip(obj.pair) * obj.beta)).reduce(function (a, b) { return a + b }, 0)} />)
+                            current={spreads[active]} />)
                         :
                         (<></>)
                 }
                 <div className='cards-wrapper pos-top'>
                     <div className='row side-scroll'>
-                        {Object.entries(portfolios).map(([portfolioID, portfolio]) => (
-                            <Card
-                                portfolioID={portfolioID}
-                                portfolio={portfolio}
-                                setActive={setActive}
-                                spread={spreads[portfolioID]}
-                                isActive={portfolioID == active} />))}
+                        {
+                            !loadingPrices ? (
+                                Object.entries(portfolios).map(([portfolioID, portfolio]) => (
+                                    <Card
+                                        portfolioID={portfolioID}
+                                        portfolio={portfolio}
+                                        setActive={setActive}
+                                        spread={spreads[portfolioID]}
+                                        isActive={portfolioID == active} />))
+                            ) : (
+                                <>
+                                    <div className='pos-relative pl-3'>
+                                        <Spinner width={20} height={20} />
+                                    </div>
+                                    <h4 className='pl-1'>Loading prices ...</h4>
+                                </>
+                            )
+                        }
                     </div>
                 </div>
                 <button className='add-portfolio' onClick={addPortfolio}>+</button>
             </div>
+            <span class='update-timestamp font-sm'>Updated: {updateDatetime}</span>
         </main>
     );
 }
