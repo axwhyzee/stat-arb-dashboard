@@ -49,6 +49,5 @@ def prune():
     length = len(datetimes)
     
     if length > records_limit:
-        print(delete_many(datetimes[:length - records_limit + 1]))
-
-prune()
+        deleted = delete_many(datetimes[:length - records_limit])
+        print(f'Pruned: {length} - {deleted}')
