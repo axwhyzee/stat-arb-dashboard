@@ -74,7 +74,7 @@ def fetch_price(symbol: str):
             return 0
 
     try:
-        prices[symbol] = round(float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period=FXCM_CANDLE_PERIOD, number=1)['bidclose']) / pips[symbol], 6)
+        prices[symbol] = round(float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period=FXCM_CANDLE_PERIOD, number=1)['bidclose']), 6)
     except:
         pass
 
@@ -154,6 +154,10 @@ def set_interval():
             fetch_price(pair)
 
         prices_copy = prices.copy()
+
+        for pair in prices_copy:
+            prices_copy[pair] /= pips[pair]
+            
         prices_copy['datetime'] = PREV_QUERY_TIME
 
         print('Inserted ID:', insert_doc(prices_copy))
