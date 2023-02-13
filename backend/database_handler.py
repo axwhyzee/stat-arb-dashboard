@@ -12,18 +12,20 @@ client = MongoClient(connection_string)
 db = client['stat-arb-dashboard']
 collection = db['prices']
 
+records_limit = 10000
+
 
 def insert_doc(doc):
     inserted_id = collection.insert_one(doc).inserted_id # id of the doc that was just inserted
     return inserted_id
 
 def find_all():
-    cursor = collection.find({}, {'_id':0})
+    cursor = collection.find({}, {'_id':0}).sort('datetime', -1)
     return list(cursor)
 
 def find_pair(pair):
     res = []
-    cursor = collection.find({})
+    cursor = collection.find({}).sort('datetime', -1)
     
     for doc in cursor:
         res.append([doc['datetime'], doc[pair]])
@@ -41,3 +43,12 @@ def find_last():
 def delete_many(dates):
     deleted = collection.delete_many({'datetime': {'$in': dates}})
     return deleted.deleted_count
+
+def prune():
+    datetimes = collection.find({}, {'_id':0}).sort('datetime', 1).distinct('datetime')
+    length = len(datetimes)
+    
+    if length > records_limit:
+        print(delete_many(datetimes[:length - records_limit + 1]))
+
+prune()
