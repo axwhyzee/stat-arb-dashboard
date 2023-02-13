@@ -28,16 +28,33 @@ export function calcSpread(ppb) {
     for (let i = 0; i < ppb.length; i++) {
         spread += ppb[i][1] / getPip(ppb[i][0]) * ppb[i][2];
     }
-    return spread;
+
+    return roundOff(spread, 4);
 }
 
 export async function getPrice(pair) {
+    const now = Date.now();
+    console.log(pair);
+    if (now - prevPriceQuery > queryInterval) {
+        const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/all/');
+        const data = await response.json();
+
+        prices = data;
+        prevPriceQuery = now;
+    }
+
+    return prices[pair];
+}
+
+export async function getPrices() {
     const now = Date.now();
     if (now - prevPriceQuery > queryInterval) {
         const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/all/');
         const data = await response.json();
 
         prices = data;
+        prevPriceQuery = now;
+    }
 
-    return prices[pair];
+    return prices;
 }

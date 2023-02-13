@@ -7,7 +7,7 @@ body {
     width: 100%;
     background-color: #1d1d1d;
     margin: 0;
-    overflow-x: hidden;
+    padding: 0;
 }
 
 table {
@@ -24,27 +24,27 @@ td {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
+    width: 5px;
     height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #5858583d; 
+    background: #5858583d;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #555555; 
-}
-  
-
-.main-wrapper {
-    padding-left: 300px;
+    background: #555555;
 }
 
-html,
-body,
-#root,
+
+main {
+    display: flex;
+}
+
 .main-wrapper {
-    height: 100%;
+    width: 100%;
+    height: 100vh;
+    position: relative
 }
 
 .color-grey {
@@ -59,8 +59,24 @@ body,
     padding: 20px;
 }
 
-.pl-2 {
-    padding: 20px 0 20px 20px;
+.p-3 {
+    padding: 40px;
+}
+
+.pr-0 {
+    padding-right: 0;
+}
+
+.pt-1 {
+    padding-top: 10px;
+}
+
+.card-spread {
+    height: 100%;
+    color: rgb(190, 67, 67);
+    margin: 0;
+    padding: 0 10px;
+    border-right: 1px solid #353535;
 }
 
 .input-label {
@@ -97,15 +113,29 @@ body,
 .row {
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 
 .col-6 {
     width: 50%;
 }
 
+.cards-wrapper {
+    background-color: #171717;
+    border-bottom: 1px solid #2d2d2d;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow-x: hidden;
+}
+
+.active-card {
+    box-shadow: 0 0 10px 1px #b54f4f9b;
+}
+
 .user-form {
-    background-color: #292929;
-    padding: 20px 30px;
+    background-color: #252525;
     margin: 0 auto;
     border-bottom: 1px solid #464646;
 }
@@ -116,10 +146,22 @@ body,
 
 .sidebar {
     width: 300px;
-    height: 100%;
+    height: 100vh;
+    padding-top: 40px;
     background-color: #2d2d2d;
-    position: fixed;
-    top: 0;
+    display: inline-block;
+    border-right: 1px solid #3f3f3f;
+    position: relative;
+    transition: .5s;
+}
+
+.sidebar-collapse {
+    width: 40px;
+}
+
+.sidebar-collapse .sidebar-wrapper,
+.sidebar-collapse .user-form {
+    display: none;
 }
 
 .sidebar-wrapper {
@@ -157,6 +199,10 @@ body,
 }
 
 .font-sm {
+    font-size: 8px;
+}
+
+.font-md {
     font-size: 10px;
 }
 
@@ -173,17 +219,21 @@ body,
 }
 
 .color-red {
-    color:rgb(255, 94, 94);
+    color: rgb(255, 94, 94);
 }
 
 .side-scroll {
     overflow-x: auto;
 }
 
+
 .portfolio-card {
     background-color: #252525;
-    padding: 10px;
-    border: 1px solid #3f3f3f;
+    border: 1px solid #353535;
+}
+
+.portfolio-card:hover {
+    cursor: pointer;
 }
 
 .portfolio-card th {
@@ -191,7 +241,8 @@ body,
 }
 
 .card-item {
-    background-color: #333333;
+    background-color: #303030;
+    padding: 5px 12px;
     margin: 0 4px;
     border-radius: 8px;
     border: 1px solid #3f3f3f;
@@ -200,4 +251,55 @@ body,
 .tr-spacer {
     height: 30px;
     border: 0;
+}
+
+.graph {
+    width: 100%;
+    height: 100%;
+    overflow: scroll;
+}
+
+.graph>svg {
+    width: 100%;
+    min-width: 600px;
+    height: 99%;
+    min-height: 400px;
+}
+
+.add-portfolio {
+    width: 40px;
+    height: 40px;
+    background-color: #0a8a77;
+    font-size: 30px;
+    border-radius: 100%;
+    border: 1px solid #434343;
+    box-shadow: 0 0 10px 2px #1e6a00;
+    position: absolute;
+    top: 75px;
+    right: 30px;
+    transition: .2s;
+}
+
+.add-portfolio:hover {
+    border-radius: 10px;
+    transform: rotate(90deg);
+    cursor: pointer;
+}
+
+.expand-sidebar {
+    height: 40px;
+    background-color: #202020;
+    color: #aaa;
+    text-align: left;
+    font-size: 25px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    border: 0;
+    border-bottom: 1px solid #373737;
+}
+
+.expand-sidebar:hover {
+    cursor: pointer;
 }

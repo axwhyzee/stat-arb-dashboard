@@ -2,6 +2,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Query
 from typing import List, Union
 import numpy as np
+import datetime
 import fxcmpy
 import time
 
@@ -137,6 +138,11 @@ async def get_all_prices():
         PREV_QUERY_TIME = int(time.time())
         
     return prices
+
+
+@app.get('/connect/last')
+async def get_last_connect():
+    return datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_QUERY_TIME), '%d-%m-%Y %H:%M')
     
 
 @app.get('/close/')

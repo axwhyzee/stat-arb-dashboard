@@ -9,12 +9,12 @@ const Form = ({ addPair }) => {
     const onSubmit = (e) => { e.preventDefault() };
 
     return (
-        <form className='user-form' onSubmit={onSubmit}>
+        <form className='user-form p-2 pt-1' onSubmit={onSubmit}>
             <div>
                 <section className='row'>
                     <div className='p-1 col-6'>
                         <label className='input-label' htmlFor='pair'>Pair</label>
-                        <select name='pair' className='user-input color-grey' onChange={e => setPair(e.target.value)}>
+                        <select name='pair' className='user-input color-grey font-sm' onChange={e => setPair(e.target.value)}>
                             <option value=''>-----</option>
                             <option value='AUDCAD'>AUDCAD</option>
                             <option value='AUDCHF'>AUDCHF</option>
@@ -48,16 +48,16 @@ const Form = ({ addPair }) => {
                     </div>
                     <div className='p-1 col-6'>
                         <label className='input-label' htmlFor='beta'>Beta</label>
-                        <input name='beta' className='user-input color-grey' placeholder='Beta value' onChange={e => setBeta(e.target.value)} />
+                        <input name='beta' className='user-input color-grey font-sm' placeholder='Beta value' onChange={e => setBeta(e.target.value)} />
                     </div>
                 </section>
                 <section className='p-1'>
                     <label className='input-label' htmlFor='entry'>Entry</label>
-                    <input name='entry' className='user-input color-grey' onChange={e => setEntry(e.target.value)} />
+                    <input name='entry' className='user-input color-grey font-sm' onChange={e => setEntry(e.target.value)} />
                 </section>
                 <section>
                     <div className='p-1'>
-                        <button class='btn-add font-sm' onClick={() => addPair(pair, entry, beta)}>ADD</button>
+                        <button class='btn-add font-sm' onClick={() => addPair(pair, entry, beta)}>ADD TO PORTFOLIO</button>
                     </div>
                 </section>
             </div>

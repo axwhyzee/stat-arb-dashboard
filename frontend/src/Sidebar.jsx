@@ -1,7 +1,7 @@
 import React from "react";
 import SetItem from './SetItem';
 import Form from './Form';
-import { roundOff, calcSpread } from './helper';
+import { roundOff, calcSpread, getPrice } from './helper';
 import { useEffect, useState } from 'react';
 
 const API_URL = 'https://stat-arbitrage-dashboard.onrender.com/spread/';
@@ -9,6 +9,7 @@ const API_URL = 'https://stat-arbitrage-dashboard.onrender.com/spread/';
 const Sidebar = ({ id, data, editPortfolio }) => {
     const [pairs, setPairs] = useState(data);
     const [spread, setSpread] = useState(0);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const getSpread = async () => {
         let argPairs = '';
@@ -34,14 +35,19 @@ const Sidebar = ({ id, data, editPortfolio }) => {
         }
     }, [data, id])
 
-    function removePair(pair) {
-        let newPairs = pairs.filter((item) => item.pair !== pair);
-        editPortfolio(id, newPairs);
-        setPairs(newPairs);
-
+    function toggleSidebar() {
+        setIsExpanded(!isExpanded);
+        window.dispatchEvent(new Event('resize')); // trigger window resize so that graph svg updates its size
     }
 
-    function addPair(pair, entry, beta) {
+    function removePair(pair) {
+        let newPairs = pairs.filter((item) => item.pair !== pair);
+
+        editPortfolio(id, newPairs);
+        setPairs(newPairs);
+    }
+
+    async function addPair(pair, entry, beta) {
         // data validation
         // 1) check for empty inputs
         if (!pair || !entry || !beta) {
@@ -54,7 +60,7 @@ const Sidebar = ({ id, data, editPortfolio }) => {
         const entryF = parseFloat(entry);
 
         // 2) check data type of beta & entry
-        if (isNaN(beta) || betaF !== beta || isNaN(entry) || entryF !== entry) {
+        if (isNaN(beta) || betaF != beta || isNaN(entry) || entryF != entry) {
             console.log('Invalid data type');
             return;
         }
@@ -67,27 +73,28 @@ const Sidebar = ({ id, data, editPortfolio }) => {
             }
         }
 
-        newPairs = [...pairs, { 'pair': pair, 'entry': entry, 'beta': beta }];
+        newPairs = [...pairs, { 'pair': pair, 'entry': entry, 'price': await getPrice(pair), 'beta': beta }];
         editPortfolio(id, newPairs);
         setPairs(newPairs); // use epoch for unique ID
     }
 
     return (
-        <div className='sidebar'>
+        <div className={'sidebar ' + (isExpanded ? '' : 'sidebar-collapse')}>
             {
                 id !== -1
                     ? (
                         <>
                             <Form addPair={addPair} />
                             <div className='sidebar-wrapper'>
-                                <div className='sidebar-header'>SET</div>
-                                <div className='font-sm'>
-                                    Default name
-                                </div>
-                                <div className='sidebar-divider'></div>
                                 <div className='sidebar-header'>PAIRS</div>
                                 <table className='full-width'>
                                     <tbody>
+                                        <tr className='font-sm'>
+                                            <th></th>
+                                            <th className='align-right'>ENTRY</th>
+                                            <th className='align-right'>PRICE</th>
+                                            <th className='align-right'>BETA</th>
+                                        </tr>
                                         {
                                             pairs.map((item) => (
                                                 <SetItem item={item} removePair={removePair} />
@@ -101,20 +108,21 @@ const Sidebar = ({ id, data, editPortfolio }) => {
                                     <tbody>
                                         <tr className='font-sm'>
                                             <td>Entry</td>
-                                            <td className='align-right'>{roundOff(calcSpread(pairs.map((pair) => [pair.pair, pair.price, pair.beta])), 5)}</td>
+                                            <td className='align-right'>{roundOff(calcSpread(pairs.map((pair) => [pair.pair, pair.entry, pair.beta])), 4)}</td>
                                         </tr>
                                         <tr className='font-sm'>
                                             <td>Current</td>
-                                            <td className='align-right'>{roundOff(spread, 5)}</td>
+                                            <td className='align-right'>{roundOff(spread, 4)}</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </>
                     ) : (
-                        <></>
+                        <div className='sidebar-wrapper align-center'>Select a portfolio</div>
                     )
             }
+            <button className='expand-sidebar' onClick={toggleSidebar}>&#9776;</button>
         </div>
     )
 }
