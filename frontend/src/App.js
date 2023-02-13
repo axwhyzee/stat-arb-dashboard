@@ -114,12 +114,12 @@ const App = () => {
         }
     }
 
-    function spreadFromCSV(active) {
-        console.log('[] App > spreadFromCSV', portfolios[active].map((pair) => (pair.pair)));
+    function spreadFromHistorical(active) {
+        console.log('[] App > spreadFromHistorical', portfolios[active].map((pair) => (pair.pair)));
         const pairs = portfolios[active].map((ele) => ([ele.pair, ele.beta]));
         const res = [];
 
-        for (const row of csvData) {
+        for (const row of historicalData) {
             const temp = [row['datetime']];
             let spread = 0;
 
@@ -142,7 +142,7 @@ const App = () => {
                 {
                     active !== -1 ?
                         (<Graph
-                            spreadData={spreadFromCSV(active)}
+                            spreadData={spreadFromHistorical(active)}
                             entry={portfolios[active].map((obj) => (obj.entry / getPip(obj.pair) * obj.beta)).reduce(function (a, b) { return a + b }, 0)}
                             current={spreads[active]} />)
                         :
