@@ -128,7 +128,7 @@ async def query_interval():
             fetch_price(pair, 'm1') # get current price
 
         response = requests.get(BASE_URL)
-        print_log('(Pinged) STATUS CODE' + response.status_code, 3)
+        print_log('(Pinged) STATUS CODE' + str(response.status_code), 3)
         
         await asyncio.sleep(QUERY_INTERVAL)
 
