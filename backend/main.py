@@ -26,7 +26,7 @@ pairs = ['AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF', 'CADJPY', '
 pips = {pair:0.01 if pair[3:] == 'JPY' else 0.0001 for pair in pairs}
 prices = {pair:0 for pair in pairs}
 
-BASE_URL = 'https://stat-arbitrage-dashboard.onrender.com/'
+BASE_URL = 'https://stat-arb-backend.onrender.com/'
 
 TOKEN = 'ff6efd1deca512f4db9d4e0594040b083ddf3cda'
 CON = None
