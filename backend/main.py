@@ -27,6 +27,8 @@ CON_INTERVAL = 60 * 30 # can only request to connect every 30 mins
 PREV_DB_UPDATE_TIME = 0
 DB_UPDATE_INTERVAL = 60 * 60 # add new record to database every 1 hour
 
+PRICE_UPDATE_TIME = 0
+
 FXCM_CANDLE_PERIOD = 'H1'
 QUERY_INTERVAL = 60 * 5 # query for pice updates every 5 mins
 
@@ -68,14 +70,14 @@ def connect():
     return False
 
 
-def fetch_price(symbol: str):
+def fetch_price(symbol: str, period):
     if not CON:
         connected = connect()
         if not connected:
             return 0
 
     try:
-        prices[symbol] = round(float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period=FXCM_CANDLE_PERIOD, number=1)['bidclose']), 6)
+        prices[symbol] = round(float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period, number=1)['bidclose']), 6)
     except:
         pass
 
@@ -133,8 +135,9 @@ async def attempt_reconnect():
 @app.get('/last-update/')
 async def get_last_connect():
     return {
-        'Last database update': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_DB_UPDATE_TIME), '%d-%m-%Y %H:%M'),
-        'Last FXCM connection attempt': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_CON_TIME), '%d-%m-%Y %H:%M')
+        'Last price update': epoch_to_datetime(PRICE_UPDATE_TIME),
+        'Last database update': epoch_to_datetime(PREV_DB_UPDATE_TIME),
+        'Last FXCM connection attempt': epoch_to_datetime(PREV_CON_TIME),
     }
 
 @app.get('/close/')
@@ -154,17 +157,17 @@ def close():
 # 2) if DB_UPDATE_INTERVAL has passed, insert record to DB as well & update PREV_DB_UPDATE_TIME
 # 3) recursion after QUERY_INTERVAL 
 def set_interval():
-    global PREV_DB_UPDATE_TIME
+    global PREV_DB_UPDATE_TIME, PRICE_UPDATE_TIME
 
     prices_copy = None
     print('[INTERVAL]', epoch_to_datetime(time.time()))
-
-    for pair in pips:
-        fetch_price(pair)
     
     if time.time() // DB_UPDATE_INTERVAL > PREV_DB_UPDATE_TIME // DB_UPDATE_INTERVAL:
         print('Updating prices ...')
         PREV_DB_UPDATE_TIME = int(time.time()) // DB_UPDATE_INTERVAL * DB_UPDATE_INTERVAL
+
+        for pair in pips:
+            fetch_price(pair, FXCM_CANDLE_PERIOD)
         
         prices_copy = prices.copy()
         for pair in prices_copy:
@@ -173,6 +176,10 @@ def set_interval():
 
         insert_doc(prices_copy)
         print('Inserted')
+    
+    PRICE_UPDATE_TIME = int(time.time())
+    for pair in pips:
+        fetch_price(pair, 'm1') # get current price
 
     time.sleep(QUERY_INTERVAL)
     set_interval()

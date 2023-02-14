@@ -2,6 +2,7 @@ import React from 'react';
 import Spinner from './Spinner';
 import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
+import { curveBasis, curveBumpX, curveBumpY, curveBundle, curveCardinalClosed, curveCardinalOpen, curveLinear, curveMonotoneX, curveMonotoneY, curveNatural, curveStep } from 'd3';
 
 const Graph = ({ graphData, entry, current }) => {
     const [resize, setResize] = useState();
@@ -45,7 +46,7 @@ const Graph = ({ graphData, entry, current }) => {
             const xScale = d3
                 .scaleLinear()
                 .domain(d3.extent(data, xValue))
-                .range([0, width - shiftX]);
+                .range([0, width - shiftX - 20]);
 
             const yScale = d3
                 .scaleLinear()
@@ -55,14 +56,15 @@ const Graph = ({ graphData, entry, current }) => {
             const lineGenerator = d3
                 .line()
                 .x((d) => xScale(xValue(d)))
-                .y((d) => yScale(yValue(d)));
+                .y((d) => yScale(yValue(d)))
+                .curve(curveMonotoneX);
 
             const xAxis = d3.axisBottom(xScale)
                 .ticks(5)
                 .tickFormat(function (d) {
                     const date = new Date(0);
                     date.setUTCSeconds(d);
-                    return date.getDay() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear();
+                    return `${date.getDate()} / ${date.getMonth() + 1} / ${date.getFullYear()}`;
                 });
 
             const yAxis = d3.axisLeft(yScale)

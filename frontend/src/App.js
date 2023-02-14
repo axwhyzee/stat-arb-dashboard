@@ -63,8 +63,8 @@ const App = () => {
             await updatePrices(); // run once immediately since setInterval runs only after interval
             setLoadingPrices(false);
 
-            const historicalData = await getLastHistorical(300);
-            setHistory(historicalData);
+            const historicalData = await getLastHistorical(400);
+            setHistory(historicalData['prices']);
 
             //queryChain(chain);
         }
@@ -97,8 +97,7 @@ const App = () => {
         let spread
 
         if (!history.length) return;
-        console.log(history[0]);
-        console.log(history[299]);
+
         for (const row of history) {
             const temp = [row['datetime']];
             spread = 0;
@@ -112,16 +111,15 @@ const App = () => {
         }
 
         // add recentmost price as last element
-        /*
         spread = 0;
         for (const pair of pairs) {
             spread += prices[pair[0]] / getPip(pair[0]) * pair[1];
         }
 
         res.push([parseInt(new Date().valueOf() / 1000), spread]);
-        */
+
         setGraphData(res);
-    }, [active, history]);
+    }, [active, history, prices]);
 
 
     // chain queries
@@ -144,6 +142,7 @@ const App = () => {
     async function updatePrices() {
         console.log('[INTERVAL] App > updatePrices()');
         const updatedPrices = await getPrices();
+        console.log(updatedPrices);
 
         if (!isEmptyObj(updatedPrices)) setPrices(updatedPrices);
         setUpdateDatetime(new Date().toLocaleString());

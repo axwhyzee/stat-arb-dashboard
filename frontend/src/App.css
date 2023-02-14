@@ -194,7 +194,7 @@ main {
     padding-top: 40px;
     background-color: #2d2d2d;
     display: inline-block;
-    flex: 0 0 300px;
+    flex: 0 0 250px;
     border-right: 1px solid #3f3f3f;
     position: relative;
     transition: .5s;
