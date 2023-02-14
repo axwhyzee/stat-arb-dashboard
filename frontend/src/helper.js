@@ -52,15 +52,13 @@ export async function getPrices() {
 }
 
 export async function getChainHistorical(n) {
-    console.log('fetching historical ...');
-    //const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/query-chain/?n=' + n); // query chain
-    const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/last/?n=' + n);
+    console.log('fetching historical (Chain) ...');
+    const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/chain/?n=' + n); // query chain
     return await response.json();
 }
 
 export async function getLastHistorical(n) {
-    console.log('fetching historical ...');
-    //const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/query-chain/?n=' + n); // query chain
+    console.log('fetching historical (Last) ...');
     const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/last/?n=' + n);
     return await response.json();
 }

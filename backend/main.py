@@ -99,16 +99,13 @@ def read_root():
         '/close/': 'Terminate connection with FXCM server'
     }
 
-
 @app.get('/price/')
 async def get_price(symbol: str):
     return await fetch_price(symbol)
 
-
 @app.get('/prices/')
 def get_prices():
     return prices
-
 
 @app.get('/historical/chain/')
 def get_chain_historical_prices(n: int = 1):
@@ -133,14 +130,12 @@ async def attempt_reconnect():
     PREV_CON_TIME = 0
     return {'Status': connect()}
 
-
 @app.get('/last-update/')
 async def get_last_connect():
     return {
         'Last database update': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_DB_UPDATE_TIME), '%d-%m-%Y %H:%M'),
-        'Last connection attempt': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_CON_TIME), '%d-%m-%Y %H:%M')
+        'Last FXCM connection attempt': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_CON_TIME), '%d-%m-%Y %H:%M')
     }
-
 
 @app.get('/close/')
 def close():
@@ -190,5 +185,6 @@ print('RECURSION INTERVAL      \t', QUERY_INTERVAL, 'secs')
 print('DATABASE UPDATE INTERVAL\t', DB_UPDATE_INTERVAL, 'secs')
 print('PREV DATABASE UPDATE    \t', epoch_to_datetime(PREV_DB_UPDATE_TIME))
 print()
+
 t = threading.Thread(target=set_interval)
 t.start()
