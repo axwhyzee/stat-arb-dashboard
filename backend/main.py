@@ -1,8 +1,8 @@
 from fastapi.middleware.cors import CORSMiddleware
 from database_handler import *
 from fastapi import FastAPI
-import threading
 import datetime
+import asyncio
 import fxcmpy
 import time
 
@@ -83,6 +83,40 @@ def fetch_price(symbol: str, period):
 
     return prices[symbol]
 
+# +-----------------------+
+# | Multi-Threading Query |
+# +-----------------------+
+
+# 1) update prices in every recursive call
+# 2) if DB_UPDATE_INTERVAL has passed, insert record to DB as well & update PREV_DB_UPDATE_TIME
+# 3) recursion after QUERY_INTERVAL 
+async def query_interval():
+    global PREV_DB_UPDATE_TIME, PRICE_UPDATE_TIME
+    prices_copy = None
+
+    while True:
+        print('[INTERVAL]', epoch_to_datetime(time.time()))
+        
+        if time.time() // DB_UPDATE_INTERVAL > PREV_DB_UPDATE_TIME // DB_UPDATE_INTERVAL:
+            print('Updating prices ...')
+            PREV_DB_UPDATE_TIME = int(time.time()) // DB_UPDATE_INTERVAL * DB_UPDATE_INTERVAL
+
+            for pair in pips:
+                fetch_price(pair, FXCM_CANDLE_PERIOD)
+            
+            prices_copy = prices.copy()
+            for pair in prices_copy:
+                prices_copy[pair] /= pips[pair]
+            prices_copy['datetime'] = PREV_DB_UPDATE_TIME
+
+            insert_doc(prices_copy)
+            print('Inserted')
+        
+        PRICE_UPDATE_TIME = int(time.time())
+        for pair in pips:
+            fetch_price(pair, 'm1') # get current price
+
+        await asyncio.sleep(QUERY_INTERVAL)
 
 # +---------------+
 # | API Endpoints |
@@ -145,53 +179,19 @@ def close():
     CON.close()
     return {'Connection': 'Terminated'}
 
+@app.on_event('startup')
+async def schedule_interval():
+    loop = asyncio.get_event_loop()
+    loop.create_task(query_interval())
 
 # uvicorn main:app --host 0.0.0.0 --port 10000
 # uvicorn main:app --reload
 
-# +-----------------------+
-# | Multi-Threading Query |
-# +-----------------------+
 
-# 1) update prices in every recursive call
-# 2) if DB_UPDATE_INTERVAL has passed, insert record to DB as well & update PREV_DB_UPDATE_TIME
-# 3) recursion after QUERY_INTERVAL 
-def set_interval():
-    global PREV_DB_UPDATE_TIME, PRICE_UPDATE_TIME
-
-    prices_copy = None
-    print('[INTERVAL]', epoch_to_datetime(time.time()))
-    
-    if time.time() // DB_UPDATE_INTERVAL > PREV_DB_UPDATE_TIME // DB_UPDATE_INTERVAL:
-        print('Updating prices ...')
-        PREV_DB_UPDATE_TIME = int(time.time()) // DB_UPDATE_INTERVAL * DB_UPDATE_INTERVAL
-
-        for pair in pips:
-            fetch_price(pair, FXCM_CANDLE_PERIOD)
-        
-        prices_copy = prices.copy()
-        for pair in prices_copy:
-            prices_copy[pair] /= pips[pair]
-        prices_copy['datetime'] = PREV_DB_UPDATE_TIME
-
-        insert_doc(prices_copy)
-        print('Inserted')
-    
-    PRICE_UPDATE_TIME = int(time.time())
-    for pair in pips:
-        fetch_price(pair, 'm1') # get current price
-
-    time.sleep(QUERY_INTERVAL)
-    set_interval()
-
-# start thread
-print('+-----------------+')
-print('| MULTI-THREADING |')
-print('+-----------------+')
+print('+-------+')
+print('| START |')
+print('+-------+')
 print('RECURSION INTERVAL      \t', QUERY_INTERVAL, 'secs')
 print('DATABASE UPDATE INTERVAL\t', DB_UPDATE_INTERVAL, 'secs')
 print('PREV DATABASE UPDATE    \t', epoch_to_datetime(PREV_DB_UPDATE_TIME))
 print()
-
-#t = threading.Thread(target=set_interval)
-#t.start()
