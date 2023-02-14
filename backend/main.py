@@ -193,5 +193,5 @@ print('DATABASE UPDATE INTERVAL\t', DB_UPDATE_INTERVAL, 'secs')
 print('PREV DATABASE UPDATE    \t', epoch_to_datetime(PREV_DB_UPDATE_TIME))
 print()
 
-t = threading.Thread(target=set_interval)
-t.start()
+#t = threading.Thread(target=set_interval)
+#t.start()
