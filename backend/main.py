@@ -116,7 +116,7 @@ def get_last_historical_prices(n: int = 1000):
     res = []
     start = num_collections()
     while start and n:
-        docs = find_all(f'prices_{start}')[:-1*n]
+        docs = find_all(f'prices_{start}')[-1*n:]
         res = docs + res
         start -= 1
         n -= len(docs)
