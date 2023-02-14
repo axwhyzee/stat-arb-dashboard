@@ -1,6 +1,7 @@
 from fastapi.middleware.cors import CORSMiddleware
 from database_handler import *
 from fastapi import FastAPI
+import requests
 import datetime
 import asyncio
 import fxcmpy
@@ -18,6 +19,8 @@ app.add_middleware(
 pairs = ['AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF', 'CADJPY', 'CHFJPY', 'EURAUD', 'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY', 'EURNZD', 'EURUSD', 'GBPAUD', 'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPNZD', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY']
 pips = {pair:0.01 if pair[3:] == 'JPY' else 0.0001 for pair in pairs}
 prices = {pair:0 for pair in pairs}
+
+BASE_URL = 'https://stat-arbitrage-dashboard.onrender.com/'
 
 TOKEN = 'ff6efd1deca512f4db9d4e0594040b083ddf3cda'
 CON = None
@@ -115,6 +118,9 @@ async def query_interval():
         PRICE_UPDATE_TIME = int(time.time())
         for pair in pips:
             fetch_price(pair, 'm1') # get current price
+
+        print('Pinged server')
+        requests.get(BASE_URL)
 
         await asyncio.sleep(QUERY_INTERVAL)
 

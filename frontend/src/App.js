@@ -142,7 +142,6 @@ const App = () => {
     async function updatePrices() {
         console.log('[INTERVAL] App > updatePrices()');
         const updatedPrices = await getPrices();
-        console.log(updatedPrices);
 
         if (!isEmptyObj(updatedPrices)) setPrices(updatedPrices);
         setUpdateDatetime(new Date().toLocaleString());
