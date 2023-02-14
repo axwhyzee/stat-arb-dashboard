@@ -16,6 +16,12 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
+msg_type_mapping = {
+    1: '[+]',
+    2: '[-]',
+    3: '[.]'
+}
+
 pairs = ['AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF', 'CADJPY', 'CHFJPY', 'EURAUD', 'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY', 'EURNZD', 'EURUSD', 'GBPAUD', 'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPNZD', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY']
 pips = {pair:0.01 if pair[3:] == 'JPY' else 0.0001 for pair in pairs}
 prices = {pair:0 for pair in pairs}
@@ -54,21 +60,23 @@ def epoch_to_datetime(epoch):
     if type(epoch) == str:
         epoch = int(epoch)
 
-    return datetime.datetime.fromtimestamp(epoch).strftime('%Y-%m-%d %H:%M')
+    return datetime.datetime.fromtimestamp(epoch).strftime('%d-%m-%Y %H:%M')
 
+def print_log(msg_content, msg_type):
+    print(f'{epoch_to_datetime(time.time())} [{msg_type_mapping[msg_type]}] {msg_content}')
 
 def connect():
     global PREV_CON_TIME, CON
     if time.time() - PREV_CON_TIME > CON_INTERVAL:
         PREV_CON_TIME = time.time()
     
-        print('[.] Attempting to connect ...')
+        print_log('Attempting to connect ...', 3)
         try:
             CON = fxcmpy.fxcmpy(access_token=TOKEN, log_level='error')
-            print('[+] Connected to FXCM server')
+            print_log('Connected to FXCM server', 1)
             return True
         except Exception as e:
-            print('Can\'t connect to FXCM server', e)
+            print_log('Can\'t connect to FXCM server', 2)
 
     return False
 
@@ -98,10 +106,10 @@ async def query_interval():
     prices_copy = None
 
     while True:
-        print('[INTERVAL]', epoch_to_datetime(time.time()))
+        print_log('New Interval', 3)
         
         if time.time() // DB_UPDATE_INTERVAL > PREV_DB_UPDATE_TIME // DB_UPDATE_INTERVAL:
-            print('Updating prices ...')
+            print_log('Updating prices ...', 3)
             PREV_DB_UPDATE_TIME = int(time.time()) // DB_UPDATE_INTERVAL * DB_UPDATE_INTERVAL
 
             for pair in pips:
@@ -113,15 +121,15 @@ async def query_interval():
             prices_copy['datetime'] = PREV_DB_UPDATE_TIME
 
             insert_doc(prices_copy)
-            print('Inserted')
+            print_log('Inserted', 1)
         
         PRICE_UPDATE_TIME = int(time.time())
         for pair in pips:
             fetch_price(pair, 'm1') # get current price
 
-        print('Pinged server')
-        requests.get(BASE_URL)
-
+        response = requests.get(BASE_URL)
+        print_log('(Pinged) STATUS CODE' + response.status_code, 3)
+        
         await asyncio.sleep(QUERY_INTERVAL)
 
 # +---------------+
@@ -187,6 +195,7 @@ def close():
 
 @app.on_event('startup')
 async def schedule_interval():
+    print_log('Starting background loop', 3)
     loop = asyncio.get_event_loop()
     loop.create_task(query_interval())
 
