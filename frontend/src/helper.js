@@ -55,7 +55,6 @@ export async function getPrices() {
         console.log('fetching prices ...');
         const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/all/');
         const data = await response.json();
-
         prices = data;
         prevPriceQuery = now;
         return prices;

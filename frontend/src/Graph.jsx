@@ -3,8 +3,9 @@ import Spinner from './Spinner';
 import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const Graph = ({ data, entry, current }) => {
+const Graph = ({ graphData, entry, current }) => {
     const [resize, setResize] = useState();
+    const [data, setData] = useState([]);
     const [loadingGraph, setLoadingGraph] = useState(false);
     const svgRef = useRef();
     const svg = d3.select(svgRef.current);
@@ -20,13 +21,18 @@ const Graph = ({ data, entry, current }) => {
     }
 
     useEffect(() => {
+        setData(graphData);
+    }, [graphData])
+
+    useEffect(() => {
         window.addEventListener('resize', resizeHandler, false);
     }, []);
 
     useEffect(() => {
+        setLoadingGraph(true);
+
         if (!data.length) return;
 
-        setLoadingGraph(true);
         svg.selectAll('*').remove();
 
         // wait for sidebar transition to finish

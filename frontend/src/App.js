@@ -12,10 +12,11 @@ import { getPip, roundOff, calcSpread, getPrice, getPrices, getHistorical, isEmp
 
 const App = () => {
     const queryInterval = 1000 * 60 * 30; // 30 mins in ms
-    const [chain, setChain] = useState();
+    const [graphData, setGraphData] = useState([]);
     const [loadingPrices, setLoadingPrices] = useState(false);
     const [updateDatetime, setUpdateDatetime] = useState(new Date().toLocaleString());
     const [intervalState, setIntervalState] = useState();
+    const [chain, setChain] = useState();
     const [historicalData, setHistoricalData] = useState([]);
     const [active, setActive] = useState(-1);
     const [spreads, setSpreads] = useState({});
@@ -40,13 +41,11 @@ const App = () => {
             setLoadingPrices(true);
             await updatePrices(); // run once immediately since setInterval runs only after interval
             setLoadingPrices(false);
+            queryChain(6);
         }
 
         fetchPrices();
-        console.log(prices);
         setIntervalState(interval);
-
-        queryChain(1);
 
         return () => clearInterval(intervalState); // cleanup on unmount
     }, []);
@@ -65,12 +64,38 @@ const App = () => {
         setSpreads(cloneSpreads);
     }, [prices]);
 
+    useEffect(() => {
+        if (active == -1) return;
+
+        const pairs = portfolios[active].map((ele) => ([ele.pair, ele.beta]));
+        const res = [];
+
+        for (const row of historicalData) {
+            const temp = [row['datetime']];
+            let spread = 0;
+
+            for (const pair of pairs) {
+                spread += row[pair[0]] * pair[1];
+            }
+
+            temp.push(roundOff(spread, 4));
+            res.push(temp);
+        }
+        setGraphData(res);
+    }, [active, historicalData]);
+
+    useEffect(() => {
+        console.log(historicalData.length, chain);
+        if (chain) queryChain(chain);
+    }, [historicalData]);
+
     async function queryChain(idx) {
+        console.log('Query chain: ' + idx);
         const dataBlock = await getHistorical(idx);
 
-        idx = dataBlock['next'];
+        // chain next query
+        setChain(dataBlock['next']);
         setHistoricalData(historicalData.concat(dataBlock['prices']));
-        if (idx) queryChain(idx); // continue the chain if there is still data
     }
 
     // interval function that queries for new prices every <query_interval>
@@ -80,6 +105,8 @@ const App = () => {
 
         if (!isEmptyObj(updatedPrices)) setPrices(updatedPrices);
         setUpdateDatetime(new Date().toLocaleString());
+
+        return;
     }
 
     async function addPortfolio() {
@@ -122,25 +149,6 @@ const App = () => {
         }
     }
 
-    function spreadFromHistorical(active) {
-        const pairs = portfolios[active].map((ele) => ([ele.pair, ele.beta]));
-        const res = [];
-
-        for (const row of historicalData) {
-            const temp = [row['datetime']];
-            let spread = 0;
-
-            for (const pair of pairs) {
-                spread += row[pair[0]] * pair[1];
-            }
-
-            temp.push(roundOff(spread, 4));
-            res.push(temp);
-        }
-
-        return res;
-    }
-
     return (
         <main className='color-grey'>
             <Sidebar id={active} spread={spreads[active]} data={(active in portfolios) ? portfolios[active] : []} editPortfolio={editPortfolio} />
@@ -149,7 +157,7 @@ const App = () => {
                 {
                     active !== -1 ?
                         (<Graph
-                            data={spreadFromHistorical(active)}
+                            graphData={graphData}
                             entry={portfolios[active].map((obj) => (obj.entry / getPip(obj.pair) * obj.beta)).reduce(function (a, b) { return a + b }, 0)}
                             current={spreads[active]} />)
                         :

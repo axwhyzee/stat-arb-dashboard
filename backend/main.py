@@ -24,19 +24,23 @@ CON = None
 PREV_CON_TIME = 0
 CON_INTERVAL = 60 * 30 # can only request to connect every 30 mins
 
+PREV_DB_UPDATE_TIME = 0
+DB_UPDATE_INTERVAL = 60 * 60 # add new record to database every 1 hour
+
 FXCM_CANDLE_PERIOD = 'H1'
-PREV_QUERY_TIME = 0
-QUERY_INTERVAL = 60 * 60 # number of seconds in h1
+QUERY_INTERVAL = 60 * 5 # query for pice updates every 5 mins
 
 init_db()
 
 last_db_record = find_last(f'prices_{num_collections()}')
 print(last_db_record)
 if last_db_record:
-    PREV_QUERY_TIME = int(last_db_record['datetime'])
+    PREV_DB_UPDATE_TIME = int(last_db_record['datetime'])
 
     del last_db_record['datetime']
     prices = last_db_record
+    for pair in pairs:
+        prices[pair] *= pips[pair]
 
 
 # +------------------+
@@ -123,7 +127,7 @@ async def attempt_reconnect():
 @app.get('/last/')
 async def get_last_connect():
     return {
-        'Last query': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_QUERY_TIME), '%d-%m-%Y %H:%M'),
+        'Last database update': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_DB_UPDATE_TIME), '%d-%m-%Y %H:%M'),
         'Last connection attempt': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_CON_TIME), '%d-%m-%Y %H:%M')
     }
 
@@ -141,37 +145,40 @@ def close():
 # | Multi-Threading Query |
 # +-----------------------+
 
+# 1) update prices in every recursive call
+# 2) if DB_UPDATE_INTERVAL has passed, insert record to DB as well & update PREV_DB_UPDATE_TIME
+# 3) recursion after QUERY_INTERVAL 
 def set_interval():
-    global PREV_QUERY_TIME
+    global PREV_DB_UPDATE_TIME
 
     prices_copy = None
     print('[INTERVAL]', epoch_to_datetime(time.time()))
+
+    for pair in pips:
+        fetch_price(pair)
     
-    if time.time() // QUERY_INTERVAL > PREV_QUERY_TIME // QUERY_INTERVAL:
+    if time.time() // DB_UPDATE_INTERVAL > PREV_DB_UPDATE_TIME // DB_UPDATE_INTERVAL:
         print('Updating prices ...')
-        PREV_QUERY_TIME = int(time.time()) // QUERY_INTERVAL * QUERY_INTERVAL
-        for pair in pips:
-            fetch_price(pair)
-
+        PREV_DB_UPDATE_TIME = int(time.time()) // DB_UPDATE_INTERVAL * DB_UPDATE_INTERVAL
+        
         prices_copy = prices.copy()
-
         for pair in prices_copy:
             prices_copy[pair] /= pips[pair]
-            
-        prices_copy['datetime'] = PREV_QUERY_TIME
+        prices_copy['datetime'] = PREV_DB_UPDATE_TIME
+        insert_doc(prices_copy)
 
-        print('Inserted ID:', insert_doc(prices_copy))
+        print('Inserted')
 
-    time.sleep(QUERY_INTERVAL // 2)
+    time.sleep(QUERY_INTERVAL)
     set_interval()
 
 # start thread
 print('+-----------------+')
 print('| MULTI-THREADING |')
 print('+-----------------+')
-print('RECURSION INTERVAL\t', QUERY_INTERVAL // 2, 'secs')
-print('REQUEST INTERVAL  \t', QUERY_INTERVAL, 'secs')
-print('PREV_QUERY_TIME   \t', epoch_to_datetime(PREV_QUERY_TIME))
+print('RECURSION INTERVAL      \t', QUERY_INTERVAL, 'secs')
+print('DATABASE UPDATE INTERVAL\t', DB_UPDATE_INTERVAL, 'secs')
+print('PREV DATABASE UPDATE    \t', epoch_to_datetime(PREV_DB_UPDATE_TIME))
 print()
 t = threading.Thread(target=set_interval)
 t.start()
