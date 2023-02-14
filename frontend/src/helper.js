@@ -60,5 +60,7 @@ export async function getChainHistorical(n) {
 export async function getLastHistorical(n) {
     console.log('fetching historical (Last) ...');
     const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/last/?n=' + n);
-    return await response.json();
+    const json = await response.json();
+    console.log(json['prices'].length);
+    return json['prices'];
 }
