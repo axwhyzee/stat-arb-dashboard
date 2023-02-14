@@ -43,11 +43,12 @@ export async function getPrices(tries = 3) {
     try {
         const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/prices/');
         const data = await response.json();
+        console.log('fetched prices');
         prices = data;
         return prices;
     } catch (e) {
         if (tries) {
-            console.log('Retrying getPrices(tries=' + tries - 1 + ')');
+            console.log('Retrying getPrices(tries=' + tries + ')');
             return await getPrices(tries - 1);
         }
         return {}
@@ -58,7 +59,7 @@ export async function getChainHistorical(n) {
     console.log('fetching historical (Chain) ...');
     try {
         const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/chain/?n=' + n); // query chain
-        console.log('fetched');
+        console.log('fetched historical');
         return await response.json();
     } catch (e) {
         console.log(e);
@@ -74,8 +75,8 @@ export async function getLastHistorical(n, tries = 3) {
         return await response.json();
     } catch (e) {
         if (tries) {
-            console.log('Retrying getLastHistorical(tries=' + tries - 1 + ')');
-            return await getPrices(tries - 1);
+            console.log('Retrying getLastHistorical(tries=' + tries + ')');
+            return await getLastHistorical(n, tries - 1);
         }
         return { 'prices': [] };
     }

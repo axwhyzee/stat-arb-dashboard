@@ -17,9 +17,9 @@ app.add_middleware(
 )
 
 msg_type_mapping = {
-    1: '[+]',
-    2: '[-]',
-    3: '[.]'
+    1: '+',
+    2: '-',
+    3: '.'
 }
 
 pairs = ['AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF', 'CADJPY', 'CHFJPY', 'EURAUD', 'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY', 'EURNZD', 'EURUSD', 'GBPAUD', 'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPNZD', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY']
@@ -128,7 +128,7 @@ async def query_interval():
             fetch_price(pair, 'm1') # get current price
 
         response = requests.get(BASE_URL)
-        print_log('(Pinged) STATUS CODE' + str(response.status_code), 3)
+        print_log('(Pinged) STATUS CODE ' + str(response.status_code), 3)
         
         await asyncio.sleep(QUERY_INTERVAL)
 
