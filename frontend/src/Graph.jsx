@@ -55,8 +55,7 @@ const Graph = ({ graphData, entry, current }) => {
             const lineGenerator = d3
                 .line()
                 .x((d) => xScale(xValue(d)))
-                .y((d) => yScale(yValue(d)))
-                .curve(d3.curveBasis);
+                .y((d) => yScale(yValue(d)));
 
             const xAxis = d3.axisBottom(xScale)
                 .ticks(5)
@@ -81,6 +80,17 @@ const Graph = ({ graphData, entry, current }) => {
                 .attr('transform', 'translate(' + shiftX + ',' + shiftY2 + ')');
 
             svg
+                .selectAll("myCircles")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("fill", "#6dd172")
+                .attr("stroke", "none")
+                .attr("cx", (d) => xScale(xValue(d)) + shiftX)
+                .attr("cy", (d) => yScale(yValue(d)) + shiftY2)
+                .attr("r", 1);
+
+            svg
                 .append('g')
                 .attr('class', 'x axis')
                 .attr('transform', 'translate(' + shiftX + ',' + (height - 20) + ')')
@@ -95,24 +105,22 @@ const Graph = ({ graphData, entry, current }) => {
             // entry spread
             svg
                 .append('line')
-                .attr('x1', xScale(data[0][0]))
-                .attr('y1', yScale(entry))
-                .attr('x2', xScale(data[data.length - 1][0]))
-                .attr('y2', yScale(entry))
+                .attr('x1', xScale(data[0][0]) + shiftX)
+                .attr('y1', yScale(entry) + shiftY2)
+                .attr('x2', xScale(data[data.length - 1][0]) + shiftX)
+                .attr('y2', yScale(entry) + shiftY2)
                 .attr('stroke', '#d15a54')
-                .attr('stroke-width', .8)
-                .attr('transform', 'translate(' + shiftX + ', ' + shiftY2 + ')');
+                .attr('stroke-width', .8);
 
             // current spread
             svg
                 .append('line')
-                .attr('x1', xScale(data[0][0]))
-                .attr('y1', yScale(current))
-                .attr('x2', xScale(data[data.length - 1][0]))
-                .attr('y2', yScale(current))
+                .attr('x1', xScale(data[0][0]) + shiftX)
+                .attr('y1', yScale(current) + shiftY2)
+                .attr('x2', xScale(data[data.length - 1][0]) + shiftX)
+                .attr('y2', yScale(current) + shiftY2)
                 .attr('stroke', '#bd7d46')
                 .attr('stroke-width', .8)
-                .attr('transform', 'translate(' + shiftX + ', ' + shiftY2 + ')')
                 .attr('onload', function () {
                     setLoadingGraph(false);
                 });

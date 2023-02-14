@@ -12,15 +12,36 @@ import { getPip, roundOff, calcSpread, getPrice, getPrices, getHistorical, isEmp
 
 const App = () => {
     const queryInterval = 1000 * 60 * 30; // 30 mins in ms
+
+    // stores graph data for active portfolio
+    // [ {datetime, price}, ... ]
     const [graphData, setGraphData] = useState([]);
+
+    // keeps track of price loading for <Card />s
     const [loadingPrices, setLoadingPrices] = useState(false);
+
+    // last update time, displayed on graph's bottom right
     const [updateDatetime, setUpdateDatetime] = useState(new Date().toLocaleString());
+
+    // stores reference to setInterval() for querying
     const [intervalState, setIntervalState] = useState();
-    const [chain, setChain] = useState();
+
+    // current query chain number
+    const [chain, setChain] = useState(6);
+
+    // [ {datetime, AUDCAD, AUDCHF ... USDJPY } ]
     const [historicalData, setHistoricalData] = useState([]);
+
+    // portfolio being displayed
     const [active, setActive] = useState(-1);
+
+    // last spread (current)
     const [spreads, setSpreads] = useState({});
+
+    // last price (current)
     const [prices, setPrices] = useState({ 'AUDCAD': 0, 'AUDCHF': 0, 'AUDJPY': 0, 'AUDNZD': 0, 'AUDUSD': 0, 'CADCHF': 0, 'CADJPY': 0, 'CHFJPY': 0, 'EURAUD': 0, 'EURCAD': 0, 'EURCHF': 0, 'EURGBP': 0, 'EURJPY': 0, 'EURNZD': 0, 'EURUSD': 0, 'GBPAUD': 0, 'GBPCAD': 0, 'GBPCHF': 0, 'GBPJPY': 0, 'GBPNZD': 0, 'GBPUSD': 0, 'NZDCAD': 0, 'NZDCHF': 0, 'NZDJPY': 0, 'NZDUSD': 0, 'USDCAD': 0, 'USDCHF': 0, 'USDJPY': 0 });
+
+    // ID: { [ {pair, entry, price, beta} ], ... }
     const [portfolios, setPortfolios] = useState({
         '16738791335': [
             { 'pair': 'AUDUSD', 'entry': 0.6889, 'price': 0.6889, 'beta': 1 },
@@ -41,7 +62,7 @@ const App = () => {
             setLoadingPrices(true);
             await updatePrices(); // run once immediately since setInterval runs only after interval
             setLoadingPrices(false);
-            queryChain(6);
+            queryChain(chain);
         }
 
         fetchPrices();
@@ -64,6 +85,7 @@ const App = () => {
         setSpreads(cloneSpreads);
     }, [prices]);
 
+    // when active or historical data changes, update the graph
     useEffect(() => {
         if (active == -1) return;
 
@@ -84,6 +106,8 @@ const App = () => {
         setGraphData(res);
     }, [active, historicalData]);
 
+
+    // chain queries
     useEffect(() => {
         console.log(historicalData.length, chain);
         if (chain) queryChain(chain);

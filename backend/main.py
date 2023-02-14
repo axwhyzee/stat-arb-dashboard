@@ -30,8 +30,6 @@ DB_UPDATE_INTERVAL = 60 * 60 # add new record to database every 1 hour
 FXCM_CANDLE_PERIOD = 'H1'
 QUERY_INTERVAL = 60 * 5 # query for pice updates every 5 mins
 
-init_db()
-
 last_db_record = find_last(f'prices_{num_collections()}')
 print(last_db_record)
 if last_db_record:
@@ -66,7 +64,6 @@ def connect():
             return True
         except Exception as e:
             print('Can\'t connect to FXCM server', e)
-            return False
 
     return False
 
@@ -92,13 +89,14 @@ def fetch_price(symbol: str):
 @app.get('/')
 def read_root():
     return {
-        'API base URL': 'https://stat-arbitrage-dashboard.onrender.com/',
-        'Get price of 1 pair': '/price/?symbol=',
-        'Get historical prices': '/historical/',
-        'Get all prices': '/all/',
-        'Reconnect to FXCM server': '/reconnect/',
-        'Get last query & connection datetimes': '/last/',
-        'Terminate connection with FXCM server': '/close/'
+        'https://stat-arbitrage-dashboard.onrender.com/': 'API base URL',
+        '/price/?symbol=': 'Get price of 1 pair',
+        '/historical/chain/?n=': 'Get historical prices in chain query fashion starting from index n',
+        '/historical/last/?n=': 'Get last n historical prices',
+        '/prices/': 'Get all prices',
+        '/reconnect/': 'Reconnect to FXCM server',
+        '/last-update/': 'Get last query & connection datetimes',
+        '/close/': 'Terminate connection with FXCM server'
     }
 
 
@@ -107,14 +105,26 @@ async def get_price(symbol: str):
     return await fetch_price(symbol)
 
 
-@app.get('/all/')
+@app.get('/prices/')
 def get_prices():
     return prices
 
 
-@app.get('/historical/')
-def get_historical_prices(i: int = 1):
-    return {'prices': find_all(f'prices_{i}'), 'next': i+1 if i<num_collections() else 0}
+@app.get('/historical/chain/')
+def get_chain_historical_prices(n: int = 1):
+    return {'prices': find_all(f'prices_{n}'), 'next': n+1 if n<num_collections() else 0}
+
+@app.get('/historical/last/')
+def get_last_historical_prices(n: int = 1000):
+    res = []
+    start = num_collections()
+    while start and n:
+        docs = find_all(f'prices_{start}')[:n]
+        res = docs + res
+        start -= 1
+        n -= len(docs)
+        
+    return {'prices':res}
 
 @app.get('/reconnect/')
 async def attempt_reconnect():
@@ -124,7 +134,7 @@ async def attempt_reconnect():
     return {'Status': connect()}
 
 
-@app.get('/last/')
+@app.get('/last-update/')
 async def get_last_connect():
     return {
         'Last database update': datetime.datetime.strftime(datetime.datetime.utcfromtimestamp(PREV_DB_UPDATE_TIME), '%d-%m-%Y %H:%M'),
@@ -165,8 +175,8 @@ def set_interval():
         for pair in prices_copy:
             prices_copy[pair] /= pips[pair]
         prices_copy['datetime'] = PREV_DB_UPDATE_TIME
-        insert_doc(prices_copy)
 
+        insert_doc(prices_copy)
         print('Inserted')
 
     time.sleep(QUERY_INTERVAL)

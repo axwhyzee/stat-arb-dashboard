@@ -1,8 +1,5 @@
 let pips = new Map();
 let prices;
-let prevPriceQuery = 0;
-
-const queryInterval = 1000 * 60 * 5 // 5 mins in ms
 
 export function roundOff(x, dp) {
     let base = Math.pow(10, dp);
@@ -37,33 +34,33 @@ export function calcSpread(ppb) {
 }
 
 export async function getPrice(pair) {
-    const now = Date.now();
-    if (now - prevPriceQuery > queryInterval) {
-        const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/all/');
-        const data = await response.json();
-
-        prices = data;
-        prevPriceQuery = now;
-    }
-
-    return prices[pair];
+    if (pair in prices) return prices[pair];
+    return 0;
 }
 
 export async function getPrices() {
-    const now = Date.now();
-    if (now - prevPriceQuery > queryInterval) {
-        console.log('fetching prices ...');
-        const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/all/');
+    console.log('fetching prices ...');
+    try {
+        const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/prices/');
         const data = await response.json();
         prices = data;
-        prevPriceQuery = now;
         return prices;
+    } catch (e) {
+        console.log(e);
+        return {}
     }
-    return {}
 }
 
-export async function getHistorical(idx) {
+export async function getChainHistorical(n) {
     console.log('fetching historical ...');
-    const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/?i=' + idx);
+    //const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/query-chain/?n=' + n); // query chain
+    const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/last/?n=' + n);
+    return await response.json();
+}
+
+export async function getLastHistorical(n) {
+    console.log('fetching historical ...');
+    //const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/query-chain/?n=' + n); // query chain
+    const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/last/?n=' + n);
     return await response.json();
 }

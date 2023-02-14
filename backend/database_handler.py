@@ -88,3 +88,5 @@ def init_db():
 #    if length > records_limit:
 #        deleted = delete_many(datetimes[:length - records_limit])
 #        print(f'Pruned: {length} - {deleted}')
+
+init_db()
