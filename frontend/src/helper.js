@@ -117,12 +117,12 @@ export function getCookie(cookieName) {
 export function setCookie(cookieName, cookieValue) {
     let cookieStr = 'expires=' + cookies['expires'] + '; ';
 
-    for (const cookie of Object.keys(cookies)) {
-        if (cookie != 'expires') cookieStr += `${cookie}=${cookies[cookie]}; `;
-    }
-
     cookies[cookieName] = JSON.stringify(cookieValue);
     cookieStr += `${cookieName}=${cookies[cookieName]}; `;
+
+    for (const cookie of Object.keys(cookies)) {
+        if (cookie != 'expires' && cookie != cookieName) cookieStr += `${cookie}=${cookies[cookie]}; `;
+    }
 
     document.cookie = cookieStr;
     printLog(document.cookie);
