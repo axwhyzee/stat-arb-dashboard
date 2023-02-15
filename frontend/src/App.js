@@ -51,8 +51,9 @@ const App = () => {
         const asyncInit = async () => {
             // initialise portfolios w/ cookies, else use default portfolios
             initCookies();
+            console.log(getCookie('portfolios'));
             const cookiePortfolio = getCookie('portfolios');
-            
+
             if (cookiePortfolio && Object.keys(cookiePortfolio).length) {
                 setPortfolios(cookiePortfolio);
             } else {

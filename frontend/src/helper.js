@@ -97,33 +97,33 @@ export async function getLastHistorical(n, tries = 3) {
 
 export function initCookies() {
     if (!document.cookie) return;
-    console.log(document.cookie);
+
     const docCookies = document.cookie.split('; ');
 
     for (const cookie of docCookies) {
         const temp = cookie.split('=');
         cookies[temp[0].trim()] = temp[1];
     }
+    if (!('expires' in cookies)) cookies['expires'] = 'Tue, 01 Jan 2999 00:00:00 GMT';
     printLog('Init cookies');
-
 
     return cookies;
 }
 
 export function getCookie(cookieName) {
-    return cookieName in cookies ? JSON.parse(cookies[cookieName]) : null; // only parse when fetching a specific cookie
+    return cookieName in cookies && cookies[cookieName] ? JSON.parse(cookies[cookieName]) : null; // only parse when fetching a specific cookie
 }
 
 export function setCookie(cookieName, cookieValue) {
     let cookieStr = '';
 
-    cookies[cookieName] = cookieValue;
+    cookies[cookieName] = JSON.stringify(cookieValue);
 
     for (const cookie of Object.keys(cookies)) {
-        cookieStr += `${cookie}=${JSON.stringify(eval(cookies[cookie]))}; `;
+        if (cookie != 'expires') cookieStr += `${cookie}=${cookies[cookie]}; `;
     }
-    printLog('Set cookie');
-    document.cookie = cookieStr;
+
+    document.cookie = cookieStr + cookies['expires'] + ';';
 }
 
 export function removeCookie(cookieName) {
