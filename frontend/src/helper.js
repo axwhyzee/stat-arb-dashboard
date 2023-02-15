@@ -117,15 +117,19 @@ export function getCookie(cookieName) {
 export function setCookie(cookieName, cookieValue) {
     let cookieStr = 'expires=' + cookies['expires'] + '; ';
 
+    printLog('Set cookie');
+    printLog(cookieName);
+
     cookies[cookieName] = JSON.stringify(cookieValue);
-    cookieStr += `${cookieName}=${cookies[cookieName]}; `;
+    printLog(cookies[cookieName]);
 
     for (const cookie of Object.keys(cookies)) {
-        if (cookie != 'expires' && cookie != cookieName) cookieStr += `${cookie}=${cookies[cookie]}; `;
+        if (cookie != 'expires') cookieStr += `${cookie}=${cookies[cookie]}; `;
     }
 
     document.cookie = cookieStr;
-    printLog(document.cookie);
+    printLog('cookieStr: ' + cookieStr);
+    printLog('document.cookie: ' + document.cookie);
 }
 
 export function removeCookie(cookieName) {
