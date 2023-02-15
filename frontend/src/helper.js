@@ -108,22 +108,21 @@ export function initCookies() {
     }
     cookies['expires'] = today.toUTCString();
     printLog('Init cookies');
-
-    return cookies;
 }
 
 export function getCookie(cookieName) {
-    return cookieName in cookies && cookies[cookieName] ? JSON.parse(cookies[cookieName]) : null; // only parse when fetching a specific cookie
+    return (cookieName in cookies && cookies[cookieName]) ? JSON.parse(cookies[cookieName]) : null; // only parse when fetching a specific cookie
 }
 
 export function setCookie(cookieName, cookieValue) {
     let cookieStr = 'expires=' + cookies['expires'] + '; ';
 
-    cookies[cookieName] = JSON.stringify(cookieValue);
-
     for (const cookie of Object.keys(cookies)) {
         if (cookie != 'expires') cookieStr += `${cookie}=${cookies[cookie]}; `;
     }
+
+    cookies[cookieName] = JSON.stringify(cookieValue);
+    cookieStr += `${cookieName}=${cookies[cookieName]}; `;
 
     document.cookie = cookieStr;
     printLog(document.cookie);

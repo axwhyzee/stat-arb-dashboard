@@ -51,8 +51,9 @@ const App = () => {
         const asyncInit = async () => {
             // initialise portfolios w/ cookies, else use default portfolios
             initCookies();
-            console.log(getCookie('portfolios'));
+
             const cookiePortfolio = getCookie('portfolios');
+            printLog(cookiePortfolio);
 
             // if have pre-existing portfolio in cookies, set it as portfolios 
             if (cookiePortfolio && Object.keys(cookiePortfolio).length) {
@@ -70,7 +71,7 @@ const App = () => {
                         { 'pair': 'AUDUSD', 'entry': await getPrice('AUDUSD'), 'price': await getPrice('AUDUSD'), 'beta': -1.6 }
                     ]
                 });
-                setActive('16738791335');
+                setActive('1673879235');
             }
 
             // fetch latest prices
