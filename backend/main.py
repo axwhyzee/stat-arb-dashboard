@@ -13,7 +13,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['https://main--wondrous-bubblegum-3deeb5.netlify.app'],
+    allow_origins=['https://main--wondrous-bubblegum-3deeb5'],
     allow_methods=['*'],
     allow_headers=['*'],
 )

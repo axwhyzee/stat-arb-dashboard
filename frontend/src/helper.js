@@ -99,12 +99,14 @@ export function initCookies() {
     if (!document.cookie) return;
 
     const docCookies = document.cookie.split('; ');
+    const today = new Date();
+    today.setDate(today.getDate() + 365); // cookies expire after 1 yr
 
     for (const cookie of docCookies) {
         const temp = cookie.split('=');
         cookies[temp[0].trim()] = temp[1];
     }
-    if (!('expires' in cookies)) cookies['expires'] = 'Tue, 01 Jan 2999 00:00:00 GMT';
+    if (!('expires' in cookies)) cookies['expires'] = today.toUTCString();
     printLog('Init cookies');
 
     return cookies;
@@ -124,6 +126,7 @@ export function setCookie(cookieName, cookieValue) {
     }
 
     document.cookie = cookieStr;
+    printLog(document.cookie);
 }
 
 export function removeCookie(cookieName) {
