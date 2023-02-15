@@ -1,7 +1,6 @@
 from fastapi.middleware.cors import CORSMiddleware
 from database_handler import *
 from fastapi import FastAPI
-import requests
 import datetime
 import asyncio
 import fxcmpy
@@ -126,9 +125,6 @@ async def query_interval():
         PRICE_UPDATE_TIME = int(time.time())
         for pair in pips:
             fetch_price(pair, 'm1') # get current price
-
-        response = requests.get(BASE_URL)
-        print_log('(Pinged) STATUS CODE ' + str(response.status_code), 3)
         
         await asyncio.sleep(QUERY_INTERVAL)
 

@@ -1,6 +1,8 @@
 let pips = new Map();
 let prices;
 
+const API_URL = 'https://stat-arb-backend.onrender.com'
+
 export function roundOff(x, dp) {
     let base = Math.pow(10, dp);
 
@@ -41,7 +43,7 @@ export async function getPrice(pair) {
 export async function getPrices(tries = 3) {
     console.log('fetching prices ...');
     try {
-        const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/prices/');
+        const response = await fetch(API_URL + '/prices/');
         const data = await response.json();
         console.log('fetched prices');
         prices = data;
@@ -58,7 +60,7 @@ export async function getPrices(tries = 3) {
 export async function getChainHistorical(n) {
     console.log('fetching historical (Chain) ...');
     try {
-        const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/chain/?n=' + n); // query chain
+        const response = await fetch(API_URL + '/historical/chain/?n=' + n); // query chain
         console.log('fetched historical');
         return await response.json();
     } catch (e) {
@@ -70,7 +72,7 @@ export async function getChainHistorical(n) {
 export async function getLastHistorical(n, tries = 3) {
     console.log('fetching historical (Last) ...');
     try {
-        const response = await fetch('https://stat-arbitrage-dashboard.onrender.com/historical/last/?n=' + n);
+        const response = await fetch(API_URL + '/historical/last/?n=' + n);
         console.log('fetched');
         return await response.json();
     } catch (e) {
