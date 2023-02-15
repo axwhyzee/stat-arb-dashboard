@@ -61,7 +61,7 @@ const App = () => {
             // initialise portfolios w/ cookies, else use default portfolios
             initCookies();
             const cookiePortfolio = getCookie('portfolios');
-            if (Object.keys(cookiePortfolio).length) setPortfolios(cookiePortfolio);
+            if (cookiePortfolio && Object.keys(cookiePortfolio).length) setPortfolios(cookiePortfolio);
             else {
                 for (const portfolioID of Object.keys(portfolios)) {
                     for (let i = 0; i < portfolios[portfolioID].length; i++) {
