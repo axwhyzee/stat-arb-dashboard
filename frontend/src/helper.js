@@ -115,7 +115,7 @@ export function getCookie(cookieName) {
 }
 
 export function setCookie(cookieName, cookieValue) {
-    let cookieStr = '';
+    let cookieStr = 'expires=' + cookies['expires'] + '; ';
 
     cookies[cookieName] = JSON.stringify(cookieValue);
 
@@ -123,7 +123,7 @@ export function setCookie(cookieName, cookieValue) {
         if (cookie != 'expires') cookieStr += `${cookie}=${cookies[cookie]}; `;
     }
 
-    document.cookie = cookieStr + cookies['expires'] + ';';
+    document.cookie = cookieStr;
 }
 
 export function removeCookie(cookieName) {
