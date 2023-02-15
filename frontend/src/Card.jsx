@@ -10,7 +10,7 @@ const Card = ({ portfolioID, portfolio, setActive, spread, isActive }) => {
                     {
                         portfolio.length ? (
                             <div className='row'>
-                                {portfolio.map((item) => (<CardItem item={item} />))}
+                                {portfolio.map((item, index) => (<CardItem key={index} item={item} />))}
                             </div>
                         ) : (<div className="p-1"></div>)
                     }

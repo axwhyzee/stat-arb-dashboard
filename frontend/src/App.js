@@ -6,7 +6,7 @@ import Card from './Card';
 import Graph from './Graph';
 import Spinner from './Spinner';
 import Sidebar from './Sidebar';
-import { getPip, roundOff, calcSpread, getPrice, getPrices, getLastHistorical, isEmptyObj, initCookies, setCookie, getCookie } from './helper';
+import { printLog, getPip, roundOff, calcSpread, getPrice, getPrices, getLastHistorical, isEmptyObj, initCookies, setCookie, getCookie } from './helper';
 
 
 const App = () => {
@@ -44,27 +44,40 @@ const App = () => {
     // ID: { [ {pair, entry, price, beta} ], ... }
     const [portfolios, setPortfolios] = useState({
         '16738791335': [
-            { 'pair': 'AUDUSD', 'entry': 0.6889, 'price': 0.6889, 'beta': 1 },
-            { 'pair': 'CADCHF', 'entry': 0.68788, 'price': 0.68788, 'beta': -4.0686013955488303 }
+            { 'pair': 'GBPCHF', 'entry': 0, 'price': 0, 'beta': 1 },
+            { 'pair': 'CADCHF', 'entry': 0, 'price': 0, 'beta': 1.2 }
         ],
         '1673879235': [
-            { 'pair': 'EURJPY', 'entry': 125.632, 'price': 125.632, 'beta': 1 },
-            { 'pair': 'GBPJPY', 'entry': 136.2049, 'price': 136.2049, 'beta': -1.2 }
+            { 'pair': 'EURUSD', 'entry': 0, 'price': 0, 'beta': 1 },
+            { 'pair': 'AUDUSD', 'entry': 0, 'price': 0, 'beta': -1.6 }
         ]
-    });
+    }); // default portfolio
 
     // initialization function - runs once on component mount
     useEffect(() => {
-        console.log('[Initialise]');
         const interval = setInterval(updatePrices, queryInterval);
 
-        initCookies();
-
         const asyncInit = async () => {
+            // initialise portfolios w/ cookies, else use default portfolios
+            initCookies();
+            const cookiePortfolio = getCookie('portfolios');
+            if (Object.keys(cookiePortfolio).length) setPortfolios(cookiePortfolio);
+            else {
+                for (const portfolioID of Object.keys(portfolios)) {
+                    for (let i = 0; i < portfolios[portfolioID].length; i++) {
+                        const currPrice = await getPrice(portfolios[portfolioID][i].pair);
+                        portfolios[portfolioID][i].entry = currPrice;
+                        portfolios[portfolioID][i].price = currPrice;
+                    }
+                }
+            }
+
+            // fetch latest prices
             setLoadingPrices(true);
             await updatePrices(); // run once immediately since setInterval runs only after interval
             setLoadingPrices(false);
 
+            // fetch historical prices
             const historicalData = await getLastHistorical(numPeriods);
             setHistory(historicalData['prices']);
 
@@ -90,15 +103,18 @@ const App = () => {
         setSpreads(cloneSpreads);
     }, [prices]);
 
-    // when active or historical data changes, update the graph
+    // update cookies when portfolio is updated
     useEffect(() => {
-        if (active == -1) return;
+        setCookie('portfolios', portfolios);
+    }, [portfolios]);
+
+
+    useEffect(() => {
+        if (active == -1 || !history.length) return;
 
         const pairs = portfolios[active].map((ele) => ([ele.pair, ele.beta]));
         const res = [];
-        let spread
-
-        if (!history.length) return;
+        let spread;
 
         for (const row of history) {
             const temp = [row['datetime']];
@@ -119,14 +135,9 @@ const App = () => {
         }
 
         res.push([parseInt(new Date().valueOf() / 1000), spread]);
-
+        printLog('Updated graph');
         setGraphData(res);
-    }, [active, history, prices]);
-    /*
-    useEffect(() => {
-        setCookie('portfolios', portfolios);
-    }, [portfolios]);
-    */
+    }, [active, history, prices, portfolios]);
 
     // chain queries
     /*
@@ -146,7 +157,7 @@ const App = () => {
 
     // interval function that queries for new prices every <query_interval>
     async function updatePrices() {
-        console.log('[INTERVAL] App > updatePrices()');
+        printLog('Interval update');
         const updatedPrices = await getPrices();
 
         if (!isEmptyObj(updatedPrices)) setPrices(updatedPrices);
@@ -213,6 +224,7 @@ const App = () => {
                             !loadingPrices ? (
                                 Object.entries(portfolios).map(([portfolioID, portfolio]) => (
                                     <Card
+                                        key={portfolioID}
                                         portfolioID={portfolioID}
                                         portfolio={portfolio}
                                         setActive={setActive}
@@ -231,7 +243,7 @@ const App = () => {
                 </div>
                 <button className='add-portfolio' onClick={addPortfolio}>+</button>
             </div>
-            <span class='update-timestamp font-sm'>Updated: {updateDatetime}</span>
+            <span className='update-timestamp font-sm'>Updated: {updateDatetime}</span>
         </main>
     );
 }

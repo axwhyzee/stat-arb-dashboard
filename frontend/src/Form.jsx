@@ -6,10 +6,8 @@ const Form = ({ addPair, errorMsg }) => {
     const [entry, setEntry] = useState()
     const [beta, setBeta] = useState()
 
-    const onSubmit = (e) => { e.preventDefault() };
-
     return (
-        <form className='user-form p-2 pt-1' onSubmit={onSubmit}>
+        <form className='user-form p-2 pt-1' onSubmit={(e) => { e.preventDefault() }}>
             <div>
                 <section className='row'>
                     <div className='p-1 col-6'>
@@ -56,10 +54,10 @@ const Form = ({ addPair, errorMsg }) => {
                     <input name='entry' className='user-input color-grey font-xs' onChange={e => setEntry(e.target.value)} />
                 </section>
                 <section className='pl-1'>
-                    <div class='sidebar-error-msg font-sm'>{errorMsg}</div>
+                    <div className='sidebar-error-msg font-sm'>{errorMsg}</div>
                 </section>
                 <section className='p-1'>
-                    <button class='btn-add font-sm' onClick={() => addPair(pair, entry, beta)}>ADD TO PORTFOLIO</button>
+                    <button className='btn-add font-sm' onClick={() => addPair(pair, entry, beta)}>ADD TO PORTFOLIO</button>
                 </section>
 
             </div>

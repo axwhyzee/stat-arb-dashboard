@@ -1,9 +1,13 @@
 let cookies = {};
 const pips = new Map();
-let prices;
+let prices = {};
 
 const API_URL = 'https://stat-arb-backend.onrender.com'
 
+export function printLog(content) {
+    const dt = new Date().toLocaleString('en-GB');
+    console.log(`[${dt}] ${content}`);
+}
 
 export function roundOff(x, dp) {
     let base = Math.pow(10, dp);
@@ -43,22 +47,22 @@ export async function getPrice(pair) {
 }
 
 export async function getPrices(tries = 3) {
-    console.log('fetching prices ...');
+    printLog(`Fetching prices (tries=${tries}) ...`);
     try {
         const response = await fetch(API_URL + '/prices/');
         const data = await response.json();
-        console.log('fetched prices');
+        printLog('Fetched prices');
         prices = data;
         return prices;
     } catch (e) {
         if (tries) {
-            console.log('Retrying getPrices(tries=' + tries + ')');
             return await getPrices(tries - 1);
         }
         return {}
     }
 }
 
+/*
 export async function getChainHistorical(n) {
     console.log('fetching historical (Chain) ...');
     try {
@@ -69,17 +73,16 @@ export async function getChainHistorical(n) {
         console.log(e);
         return { 'prices': [], 'next': 0 };
     }
-}
+}*/
 
 export async function getLastHistorical(n, tries = 3) {
-    console.log('fetching historical (Last) ...');
+    printLog(`Fetching historical (tries=${tries}) ...`);
     try {
         const response = await fetch(API_URL + '/historical/last/?n=' + n);
-        console.log('fetched');
+        printLog('Fetched');
         return await response.json();
     } catch (e) {
         if (tries) {
-            console.log('Retrying getLastHistorical(tries=' + tries + ')');
             return await getLastHistorical(n, tries - 1);
         }
         return { 'prices': [] };
@@ -91,18 +94,17 @@ export async function getLastHistorical(n, tries = 3) {
 // +---------+
 
 export function initCookies() {
-    const docCookies = document.cookie.split(';');
-    let temp;
+    if (!document.cookie) return;
+
+    const docCookies = document.cookie.split('; ');
 
     for (const cookie of docCookies) {
-        temp = cookie.split('=');
+        const temp = cookie.split('=');
         cookies[temp[0].trim()] = temp[1];
     }
-    console.log('init cookies: ', cookies);
+    printLog('Init cookies');
 
-    for (const cookie of Object.keys(cookies)) {
-        console.log(cookies[cookie]);
-    }
+    return cookies;
 }
 
 export function getCookie(cookieName) {
@@ -115,14 +117,13 @@ export function setCookie(cookieName, cookieValue) {
     cookies[cookieName] = cookieValue;
 
     for (const cookie of Object.keys(cookies)) {
-        console.log(cookie, cookies[cookie]);
-        cookieStr += `${cookie}=${JSON.stringify(eval(cookies[cookie]))};`;
+        cookieStr += `${cookie}=${JSON.stringify(eval(cookies[cookie]))}; `;
     }
-    console.log('set cookie: ' + cookieStr);
+    printLog('Set cookie');
     document.cookie = cookieStr;
 }
 
 export function removeCookie(cookieName) {
     delete cookies[cookieName];
-    console.log('deleted: ', cookies);
+    printLog('Deleted');
 }

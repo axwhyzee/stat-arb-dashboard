@@ -80,8 +80,8 @@ const Sidebar = ({ id, spread, data, editPortfolio }) => {
                                             <th className='align-right'>BETA</th>
                                         </tr>
                                         {
-                                            pairs.map((item) => (
-                                                <SetItem item={item} removePair={removePair} />
+                                            pairs.map((item, index) => (
+                                                <SetItem key={index} item={item} removePair={removePair} />
                                             ))
                                         }
                                     </tbody>
