@@ -1,5 +1,4 @@
 import './App.css';
-
 import React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 
@@ -7,7 +6,7 @@ import Card from './Card';
 import Graph from './Graph';
 import Spinner from './Spinner';
 import Sidebar from './Sidebar';
-import { getPip, roundOff, calcSpread, getPrice, getPrices, getLastHistorical, isEmptyObj } from './helper';
+import { getPip, roundOff, calcSpread, getPrice, getPrices, getLastHistorical, isEmptyObj, initCookies, setCookie, getCookie } from './helper';
 
 
 const App = () => {
@@ -57,6 +56,8 @@ const App = () => {
     useEffect(() => {
         console.log('[Initialise]');
         const interval = setInterval(updatePrices, queryInterval);
+
+        initCookies();
 
         const asyncInit = async () => {
             setLoadingPrices(true);
@@ -120,7 +121,11 @@ const App = () => {
 
         setGraphData(res);
     }, [active, history, prices]);
-
+    /*
+    useEffect(() => {
+        setCookie('portfolios', portfolios);
+    }, [portfolios]);
+    */
 
     // chain queries
     /*

@@ -1,7 +1,9 @@
-let pips = new Map();
+let cookies = {};
+const pips = new Map();
 let prices;
 
 const API_URL = 'https://stat-arb-backend.onrender.com'
+
 
 export function roundOff(x, dp) {
     let base = Math.pow(10, dp);
@@ -82,4 +84,45 @@ export async function getLastHistorical(n, tries = 3) {
         }
         return { 'prices': [] };
     }
+}
+
+// +---------+
+// | Cookies |
+// +---------+
+
+export function initCookies() {
+    const docCookies = document.cookie.split(';');
+    let temp;
+
+    for (const cookie of docCookies) {
+        temp = cookie.split('=');
+        cookies[temp[0].trim()] = temp[1];
+    }
+    console.log('init cookies: ', cookies);
+
+    for (const cookie of Object.keys(cookies)) {
+        console.log(cookies[cookie]);
+    }
+}
+
+export function getCookie(cookieName) {
+    return cookieName in cookies ? JSON.parse(cookies[cookieName]) : null; // only parse when fetching a specific cookie
+}
+
+export function setCookie(cookieName, cookieValue) {
+    let cookieStr = '';
+
+    cookies[cookieName] = cookieValue;
+
+    for (const cookie of Object.keys(cookies)) {
+        console.log(cookie, cookies[cookie]);
+        cookieStr += `${cookie}=${JSON.stringify(eval(cookies[cookie]))};`;
+    }
+    console.log('set cookie: ' + cookieStr);
+    document.cookie = cookieStr;
+}
+
+export function removeCookie(cookieName) {
+    delete cookies[cookieName];
+    console.log('deleted: ', cookies);
 }
