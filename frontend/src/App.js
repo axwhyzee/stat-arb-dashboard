@@ -53,7 +53,6 @@ const App = () => {
             initCookies();
 
             const cookiePortfolio = getCookie('portfolios');
-            printLog(cookiePortfolio);
 
             // if have pre-existing portfolio in cookies, set it as portfolios 
             if (cookiePortfolio && Object.keys(cookiePortfolio).length) {
