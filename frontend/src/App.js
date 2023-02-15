@@ -11,6 +11,7 @@ import { getPip, roundOff, calcSpread, getPrice, getPrices, getLastHistorical, i
 
 const App = () => {
     const queryInterval = 1000 * 60 * 5; // 5 mins in ms
+    const numPeriods = 500;
 
     // stores graph data for active portfolio
     // [ {datetime, price}, ... ]
@@ -64,7 +65,7 @@ const App = () => {
             await updatePrices(); // run once immediately since setInterval runs only after interval
             setLoadingPrices(false);
 
-            const historicalData = await getLastHistorical(400);
+            const historicalData = await getLastHistorical(numPeriods);
             setHistory(historicalData['prices']);
 
             //queryChain(chain);
