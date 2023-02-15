@@ -100,13 +100,13 @@ export function initCookies() {
 
     const docCookies = document.cookie.split('; ');
     const today = new Date();
-    today.setDate(today.getDate() + 365); // cookies expire after 1 yr
+    today.setDate(today.getDate() + 365); // extend cookie expiry by 1 yr
 
     for (const cookie of docCookies) {
         const temp = cookie.split('=');
         cookies[temp[0].trim()] = temp[1];
     }
-    if (!('expires' in cookies)) cookies['expires'] = today.toUTCString();
+    cookies['expires'] = today.toUTCString();
     printLog('Init cookies');
 
     return cookies;
