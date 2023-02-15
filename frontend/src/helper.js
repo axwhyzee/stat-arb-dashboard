@@ -42,6 +42,8 @@ export function calcSpread(ppb) {
 }
 
 export async function getPrice(pair) {
+    if (!(pair in prices)) await getPrices();
+
     if (pair in prices) return prices[pair];
     return 0;
 }
@@ -95,7 +97,7 @@ export async function getLastHistorical(n, tries = 3) {
 
 export function initCookies() {
     if (!document.cookie) return;
-
+    console.log(document.cookie);
     const docCookies = document.cookie.split('; ');
 
     for (const cookie of docCookies) {
@@ -103,6 +105,7 @@ export function initCookies() {
         cookies[temp[0].trim()] = temp[1];
     }
     printLog('Init cookies');
+
 
     return cookies;
 }

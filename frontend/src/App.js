@@ -42,16 +42,7 @@ const App = () => {
     const [prices, setPrices] = useState({ 'AUDCAD': 0, 'AUDCHF': 0, 'AUDJPY': 0, 'AUDNZD': 0, 'AUDUSD': 0, 'CADCHF': 0, 'CADJPY': 0, 'CHFJPY': 0, 'EURAUD': 0, 'EURCAD': 0, 'EURCHF': 0, 'EURGBP': 0, 'EURJPY': 0, 'EURNZD': 0, 'EURUSD': 0, 'GBPAUD': 0, 'GBPCAD': 0, 'GBPCHF': 0, 'GBPJPY': 0, 'GBPNZD': 0, 'GBPUSD': 0, 'NZDCAD': 0, 'NZDCHF': 0, 'NZDJPY': 0, 'NZDUSD': 0, 'USDCAD': 0, 'USDCHF': 0, 'USDJPY': 0 });
 
     // ID: { [ {pair, entry, price, beta} ], ... }
-    const [portfolios, setPortfolios] = useState({
-        '16738791335': [
-            { 'pair': 'GBPCHF', 'entry': 0, 'price': 0, 'beta': 1 },
-            { 'pair': 'CADCHF', 'entry': 0, 'price': 0, 'beta': 1.2 }
-        ],
-        '1673879235': [
-            { 'pair': 'EURUSD', 'entry': 0, 'price': 0, 'beta': 1 },
-            { 'pair': 'AUDUSD', 'entry': 0, 'price': 0, 'beta': -1.6 }
-        ]
-    }); // default portfolio
+    const [portfolios, setPortfolios] = useState({}); // default portfolio
 
     // initialization function - runs once on component mount
     useEffect(() => {
@@ -61,15 +52,21 @@ const App = () => {
             // initialise portfolios w/ cookies, else use default portfolios
             initCookies();
             const cookiePortfolio = getCookie('portfolios');
-            if (cookiePortfolio && Object.keys(cookiePortfolio).length) setPortfolios(cookiePortfolio);
-            else {
-                for (const portfolioID of Object.keys(portfolios)) {
-                    for (let i = 0; i < portfolios[portfolioID].length; i++) {
-                        const currPrice = await getPrice(portfolios[portfolioID][i].pair);
-                        portfolios[portfolioID][i].entry = currPrice;
-                        portfolios[portfolioID][i].price = currPrice;
-                    }
-                }
+            
+            if (cookiePortfolio && Object.keys(cookiePortfolio).length) {
+                setPortfolios(cookiePortfolio);
+            } else {
+                // default portfolios
+                setPortfolios({
+                    '16738791335': [
+                        { 'pair': 'GBPCHF', 'entry': await getPrice('GBPCHF'), 'price': await getPrice('GBPCHF'), 'beta': 1 },
+                        { 'pair': 'CADCHF', 'entry': await getPrice('CADCHF'), 'price': await getPrice('CADCHF'), 'beta': 1.2 }
+                    ],
+                    '1673879235': [
+                        { 'pair': 'EURUSD', 'entry': await getPrice('EURUSD'), 'price': await getPrice('EURUSD'), 'beta': 1 },
+                        { 'pair': 'AUDUSD', 'entry': await getPrice('AUDUSD'), 'price': await getPrice('AUDUSD'), 'beta': -1.6 }
+                    ]
+                });
             }
 
             // fetch latest prices
@@ -90,7 +87,7 @@ const App = () => {
     }, []);
 
     // update all spread values on price updates
-    useMemo(() => {
+    useEffect(() => {
         let spread;
         let cloneSpreads = {};
         for (const ID of Object.keys(portfolios)) {
@@ -101,7 +98,7 @@ const App = () => {
             cloneSpreads[ID] = roundOff(spread, 4);
         }
         setSpreads(cloneSpreads);
-    }, [prices]);
+    }, [prices, portfolios]);
 
     // update cookies when portfolio is updated
     useEffect(() => {
