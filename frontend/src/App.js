@@ -54,10 +54,12 @@ const App = () => {
             console.log(getCookie('portfolios'));
             const cookiePortfolio = getCookie('portfolios');
 
+            // if have pre-existing portfolio in cookies, set it as portfolios 
             if (cookiePortfolio && Object.keys(cookiePortfolio).length) {
                 setPortfolios(cookiePortfolio);
+                setActive(Object.keys(cookiePortfolio)[0]);
+                // else, use default portfolios
             } else {
-                // default portfolios
                 setPortfolios({
                     '16738791335': [
                         { 'pair': 'GBPCHF', 'entry': await getPrice('GBPCHF'), 'price': await getPrice('GBPCHF'), 'beta': 1 },
@@ -68,6 +70,7 @@ const App = () => {
                         { 'pair': 'AUDUSD', 'entry': await getPrice('AUDUSD'), 'price': await getPrice('AUDUSD'), 'beta': -1.6 }
                     ]
                 });
+                setActive('16738791335');
             }
 
             // fetch latest prices
@@ -196,7 +199,9 @@ const App = () => {
         } else {
             delete clonePortfolios[id];
             delete cloneSpreads[id];
-            setActive(-1);
+
+            if (Object.keys(cloneSpreads).length) setActive(Object.keys(cloneSpreads)[0]);
+            else setActive(-1);
             setPortfolios(clonePortfolios);
             setSpreads(cloneSpreads);
         }
