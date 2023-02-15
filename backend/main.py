@@ -5,12 +5,15 @@ import datetime
 import asyncio
 import fxcmpy
 import time
+import os
+
+load_dotenv(find_dotenv())
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=['https://main--wondrous-bubblegum-3deeb5'],
     allow_methods=['*'],
     allow_headers=['*'],
 )
@@ -27,7 +30,7 @@ prices = {pair:0 for pair in pairs}
 
 BASE_URL = 'https://stat-arb-backend.onrender.com/'
 
-TOKEN = 'ff6efd1deca512f4db9d4e0594040b083ddf3cda'
+TOKEN = password = os.environ.get('FXCM_TOKEN')
 CON = None
 PREV_CON_TIME = 0
 CON_INTERVAL = 60 * 30 # can only request to connect every 30 mins
@@ -184,10 +187,6 @@ async def get_last_connect():
         'Last FXCM connection attempt': epoch_to_datetime(PREV_CON_TIME),
     }
 
-@app.get('/close/')
-def close():
-    CON.close()
-    return {'Connection': 'Terminated'}
 
 @app.on_event('startup')
 async def schedule_interval():

@@ -1,6 +1,6 @@
 import './App.css';
 import React from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 import Card from './Card';
 import Graph from './Graph';
