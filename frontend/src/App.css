@@ -287,9 +287,9 @@ main {
 
 .graph>svg {
     width: 100%;
-    /*min-width: 600px;*/
+    min-width: 600px;
     height: 99%;
-    /*min-height: 400px;*/
+    min-height: 400px;
 }
 
 .add-portfolio {
