@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 const Sidebar = ({ id, spread, data, editPortfolio }) => {
     const [pairs, setPairs] = useState(data);
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(window.innerWidth > 380 ? true : false);
     const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {

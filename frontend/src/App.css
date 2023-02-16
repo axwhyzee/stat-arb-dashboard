@@ -200,7 +200,7 @@ main {
 }
 
 .sidebar-collapse {
-    flex: 0 0 40px;
+    flex: 0 0 40px !important;
 }
 
 .sidebar-collapse .sidebar-wrapper,
@@ -287,9 +287,9 @@ main {
 
 .graph>svg {
     width: 100%;
-    min-width: 600px;
+    /*min-width: 600px;*/
     height: 99%;
-    min-height: 400px;
+    /*min-height: 400px;*/
 }
 
 .add-portfolio {
@@ -367,5 +367,11 @@ main {
 @keyframes spinner {
     to {
         transform: rotate(360deg);
+    }
+}
+
+@media only screen and (max-width: 380px) {
+    .sidebar {
+        flex: 0 0 100%;
     }
 }
