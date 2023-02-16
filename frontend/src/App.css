@@ -195,12 +195,12 @@ main {
     display: inline-block;
     flex: 0 0 250px;
     border-right: 1px solid #3f3f3f;
-    position: relative;
     transition: .5s;
+    position: relative;
 }
 
 .sidebar-collapse {
-    flex: 0 0 40px !important;
+    flex: 0 0 40px;
 }
 
 .sidebar-collapse .sidebar-wrapper,
@@ -324,6 +324,7 @@ main {
     left: 0;
     border: 0;
     border-bottom: 1px solid #373737;
+    z-index: 100;
     transition: .2s;
 }
 
@@ -373,5 +374,27 @@ main {
 @media only screen and (max-width: 380px) {
     .sidebar {
         flex: 0 0 100%;
+        position: static;
+        /* remove position: relative */
+    }
+
+    .sidebar-collapse {
+        flex: 0 0 0;
+    }
+
+    .expand-sidebar {
+        border-right: 1px solid #3b3b3b;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+    }
+
+    .main-wrapper {
+        padding-top: 40px;
+    }
+
+    .cards-wrapper {
+        top: 40px;
     }
 }
