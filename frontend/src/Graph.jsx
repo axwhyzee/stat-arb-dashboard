@@ -12,7 +12,7 @@ const Graph = ({ graphData, entry, current }) => {
     const svg = d3.select(svgRef.current);
     const shiftY = 95;
     const shiftY2 = 20 + shiftY;
-    const shiftX = 50;
+    const shiftX = 40;
 
     let width;
     let height;
