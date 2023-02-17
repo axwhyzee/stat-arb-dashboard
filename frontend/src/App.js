@@ -222,7 +222,7 @@ const App = () => {
                         (<></>)
                 }
                 <div className='cards-wrapper pos-top'>
-                    <div className='row side-scroll'>
+                    <div className='row side-scroll pr-2'>
                         {
                             !loadingPrices ? (
                                 Object.entries(portfolios).map(([portfolioID, portfolio]) => (
