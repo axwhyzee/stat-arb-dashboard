@@ -6,12 +6,12 @@ import Card from './Card';
 import Graph from './Graph';
 import Spinner from './Spinner';
 import Sidebar from './Sidebar';
-import { printLog, getPip, roundOff, calcSpread, getPrice, getPrices, getLastHistorical, isEmptyObj, initCookies, setCookie, getCookie } from './helper';
+import { printLog, getPip, roundOff, calcSpread, getPrice, getPrices, getLastHistorical, initCookies, setCookie, getCookie } from './helper';
 
 
 const App = () => {
     const queryInterval = 1000 * 60 * 5; // 5 mins in ms
-    const numPeriods = 500;
+    const numPeriods = 250;
 
     // stores graph data for active portfolio
     // [ {datetime, price}, ... ]
@@ -44,8 +44,10 @@ const App = () => {
     // ID: { [ {pair, entry, price, beta} ], ... }
     const [portfolios, setPortfolios] = useState({}); // default portfolio
 
-    // initialization function - runs once on component mount
     useEffect(() => {
+        /**
+         * Set initial states on component mount
+         */
         const interval = setInterval(updatePrices, queryInterval);
 
         const asyncInit = async () => {
@@ -54,20 +56,22 @@ const App = () => {
 
             const cookiePortfolio = getCookie('portfolios');
 
-            // if have pre-existing portfolio in cookies, set it as portfolios 
+
             if (cookiePortfolio && Object.keys(cookiePortfolio).length) {
+                // pre-existing portfolio in cookies. Set them as portfolios state 
                 setPortfolios(cookiePortfolio);
                 setActive(Object.keys(cookiePortfolio)[0]);
-                // else, use default portfolios
+
             } else {
+                // no pre-existing portfolios in cookies, so use default portfolios instead
                 setPortfolios({
                     '16738791335': [
                         { 'pair': 'GBPCHF', 'entry': await getPrice('GBPCHF'), 'price': await getPrice('GBPCHF'), 'beta': 1 },
                         { 'pair': 'CADCHF', 'entry': await getPrice('CADCHF'), 'price': await getPrice('CADCHF'), 'beta': 1.2 }
                     ],
                     '1673879235': [
-                        { 'pair': 'EURUSD', 'entry': await getPrice('EURUSD'), 'price': await getPrice('EURUSD'), 'beta': 1 },
-                        { 'pair': 'AUDUSD', 'entry': await getPrice('AUDUSD'), 'price': await getPrice('AUDUSD'), 'beta': -1.6 }
+                        { 'pair': 'AUDUSD', 'entry': await getPrice('AUDUSD'), 'price': await getPrice('AUDUSD'), 'beta': 1 },
+                        { 'pair': 'CADCHF', 'entry': await getPrice('CADCHF'), 'price': await getPrice('CADCHF'), 'beta': -4.0686 }
                     ]
                 });
                 setActive('1673879235');
@@ -75,15 +79,18 @@ const App = () => {
 
             // fetch latest prices
             setLoadingPrices(true);
-            await updatePrices(); // run once immediately since setInterval runs only after interval
+
+            await updatePrices();
             setLoadingPrices(false);
 
             // fetch historical prices
             const historicalData = await getLastHistorical(numPeriods);
-            setHistory(historicalData['prices']);
+            setHistory(historicalData);
 
             //queryChain(chain);
         }
+
+        // initialise initial states
         asyncInit();
         setIntervalState(interval);
 
@@ -111,6 +118,10 @@ const App = () => {
 
 
     useEffect(() => {
+        /**
+         * When active either portfolio, historical prices, current prices or portfolios states are changed, 
+         * update graph data state with newly calculated spreads
+         */
         if (active == -1 || !history.length) return;
 
         const pairs = portfolios[active].map((ele) => ([ele.pair, ele.beta]));
@@ -158,14 +169,22 @@ const App = () => {
 
     // interval function that queries for new prices every <query_interval>
     async function updatePrices() {
+        /**
+         * Update with new prices so UI can display latest FX prices and portfolio spread values
+         */
         printLog('Interval update');
         const updatedPrices = await getPrices();
 
-        if (!isEmptyObj(updatedPrices)) setPrices(updatedPrices);
+        if (Object.keys(updatedPrices).length > 0) setPrices(updatedPrices);
         setUpdateDatetime(new Date().toLocaleString());
     }
 
     async function addPortfolio() {
+        /**
+         * Triggered when user adds portfolio.
+         * Create new portfolio object and set as active portfolio.
+         * Calculate spread of new portfolio so it can be displayed in top bar.
+         */
         const ID = new Date().valueOf();
         const clonePortfolios = structuredClone(portfolios);
         const cloneSpreads = structuredClone(spreads);
@@ -180,6 +199,14 @@ const App = () => {
     }
 
     async function editPortfolio(id, newPortfolio) {
+        /**
+         * Triggered when a portfolio is edited by either adding or deleting an instrument.
+         * Modify portfolios and spreads state.
+         * Delete portfolio from portfolios if new portfolio has no elements.
+         * 
+         * @param {number} id           ID of portfolio to be edited
+         * @param {Object} newPortfolio New portfolio object to replace the old
+         */
         const clonePortfolios = structuredClone(portfolios);
         const cloneSpreads = structuredClone(spreads);
         let ppbs = [];

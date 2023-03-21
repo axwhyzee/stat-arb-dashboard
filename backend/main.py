@@ -13,20 +13,21 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['https://main--wondrous-bubblegum-3deeb5.netlify.app'],
+    allow_origins=['*'],
     allow_methods=['*'],
     allow_headers=['*'],
 )
 
-msg_type_mapping = {
+# for logging purposes
+MSG_TYPE_MAPPING = {
     1: '+',
     2: '-',
     3: '.'
 }
 
-pairs = ['AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF', 'CADJPY', 'CHFJPY', 'EURAUD', 'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY', 'EURNZD', 'EURUSD', 'GBPAUD', 'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPNZD', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY']
-pips = {pair:0.01 if pair[3:] == 'JPY' else 0.0001 for pair in pairs}
-prices = {pair:0 for pair in pairs}
+PAIRS = ['AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF', 'CADJPY', 'CHFJPY', 'EURAUD', 'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY', 'EURNZD', 'EURUSD', 'GBPAUD', 'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPNZD', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY']
+PIPS = {pair:0.01 if pair[3:] == 'JPY' else 0.0001 for pair in PAIRS}
+prices = {pair:0 for pair in PAIRS} # store current prices in memory
 
 BASE_URL = 'https://stat-arb-backend.onrender.com/'
 
@@ -45,29 +46,43 @@ QUERY_INTERVAL = 60 * 5 # query for pice updates every 5 mins
 
 last_db_record = find_last(f'prices_{num_collections()}')
 print(last_db_record)
+
 if last_db_record:
     PREV_DB_UPDATE_TIME = int(last_db_record['datetime'])
 
     del last_db_record['datetime']
     prices = last_db_record
-    for pair in pairs:
-        prices[pair] *= pips[pair]
+    for pair in PAIRS:
+        prices[pair] *= PIPS[pair]
 
 
 # +------------------+
 # | Helper Functions |
 # +------------------+
 
-def epoch_to_datetime(epoch):
-    if type(epoch) == str:
-        epoch = int(epoch)
+def epoch_to_datetime(epoch: int) -> str:
+    '''
+    Convert unix timestamp to dd-mm-YYYY HH-MM format
 
+    :param int epoch: Unix timestamp
+    :return: Datestring in dd-mm-YYYY HH-MM format
+    :rtype: str
+    '''
     return datetime.datetime.fromtimestamp(epoch).strftime('%d-%m-%Y %H:%M')
 
-def print_log(msg_content, msg_type):
-    print(f'{epoch_to_datetime(time.time())} [{msg_type_mapping[msg_type]}] {msg_content}')
+def print_log(msg_content: str, msg_type: int):
+    '''
+    Log a message
+    '''
+    print(f'{epoch_to_datetime(time.time())} [{MSG_TYPE_MAPPING[msg_type]}] {msg_content}')
 
-def connect():
+def connect() -> bool:
+    '''
+    Connect to FXCM websocket if previous connection attempt is more than CON_INTERVAL seconds before
+
+    :return: True if connected successfully, else False
+    :rtype: bool
+    '''
     global PREV_CON_TIME, CON
     if time.time() - PREV_CON_TIME > CON_INTERVAL:
         PREV_CON_TIME = time.time()
@@ -82,8 +97,15 @@ def connect():
 
     return False
 
+def fetch_price(symbol: str, period: str) -> float:
+    '''
+    Query for price of a symbol in specified timeframe and update price of symbol in memory
 
-def fetch_price(symbol: str, period):
+    :param str symbol: Symbol/ticker of financial instrument
+    :param str period: Timeframe of candlestick
+    :return: Price of symbol in specified timeframe
+    :rtype: float
+    '''
     if not CON:
         connected = connect()
         if not connected:
@@ -96,37 +118,37 @@ def fetch_price(symbol: str, period):
 
     return prices[symbol]
 
-# +-----------------------+
-# | Multi-Threading Query |
-# +-----------------------+
-
-# 1) update prices in every recursive call
-# 2) if DB_UPDATE_INTERVAL has passed, insert record to DB as well & update PREV_DB_UPDATE_TIME
-# 3) recursion after QUERY_INTERVAL 
 async def query_interval():
+    '''
+    Every QUERY_INTERVAL seconds, update prices of all symbols in PAIRS in server memory.
+    If more than DB_UPDATE_INTERVAL seconds has passed since PREV_DB_UPDATE_TIME, insert new prices into database
+    '''
     global PREV_DB_UPDATE_TIME, PRICE_UPDATE_TIME
     prices_copy = None
 
     while True:
         print_log('New Interval', 3)
         
+        # more than DB_UPDATE_INTERVAL seconds has passed since PREV_DB_UPDATE_TIME
         if time.time() // DB_UPDATE_INTERVAL > PREV_DB_UPDATE_TIME // DB_UPDATE_INTERVAL:
             print_log('Updating prices ...', 3)
             PREV_DB_UPDATE_TIME = int(time.time()) // DB_UPDATE_INTERVAL * DB_UPDATE_INTERVAL
 
-            for pair in pips:
+            # fetch prices of previous candlesticks
+            for pair in PIPS:
                 fetch_price(pair, FXCM_CANDLE_PERIOD)
             
             prices_copy = prices.copy()
             for pair in prices_copy:
-                prices_copy[pair] /= pips[pair]
+                prices_copy[pair] /= PIPS[pair]
             prices_copy['datetime'] = PREV_DB_UPDATE_TIME
 
-            insert_doc(prices_copy)
-            print_log('Inserted', 1)
+            # insert new prices into database
+            # insert_doc(prices_copy)
+            # print_log('Inserted', 1)
         
         PRICE_UPDATE_TIME = int(time.time())
-        for pair in pips:
+        for pair in PAIRS:
             fetch_price(pair, 'm1') # get current price
         
         await asyncio.sleep(QUERY_INTERVAL)
@@ -136,7 +158,13 @@ async def query_interval():
 # +---------------+
 
 @app.get('/')
-def read_root():
+def root() -> dict:
+    '''
+    Display all API endpoints at root of app
+
+    :return: All API endpoints
+    :rtype: str
+    '''
     return {
         'https://stat-arbitrage-dashboard.onrender.com/': 'API base URL',
         '/price/?symbol=': 'Get price of 1 pair',
@@ -149,19 +177,46 @@ def read_root():
     }
 
 @app.get('/price/')
-async def get_price(symbol: str):
+async def get_price(symbol: str) -> float:
+    '''
+    Return price of symbol
+
+    :param str symbol: Symbol/ticker of instrument to query for
+    :return: Price of symbol
+    :rtype: float
+    '''
     return await fetch_price(symbol)
 
 @app.get('/prices/')
-def get_prices():
+def get_prices() -> dict:
+    '''
+    Return prices of all pairs in last period
+
+    :return: Prices of all pairs in last period
+    :rtype: dict
+    '''
     return prices
 
 @app.get('/historical/chain/')
-def get_chain_historical_prices(n: int = 1):
+def get_chain_historical_prices(n: int = 1) -> dict:
+    '''
+    Return all historical prices in chunks of 10,000 (size of each collection)
+
+    :param int n: Database collection ID
+    :return: Historical prices in prices_{n} collection
+    :rtype: dict
+    '''
     return {'prices': find_all(f'prices_{n}'), 'next': n+1 if n<num_collections() else 0}
 
 @app.get('/historical/last/')
-def get_last_historical_prices(n: int = 1000):
+def get_last_historical_prices(n: int = 1000) -> list[dict]:
+    '''
+    Return last n closing prices
+    
+    :param int n: Last n periods
+    :return: Last n closing prices
+    :rtype: list[dict]
+    '''
     res = []
     start = num_collections()
     while start and n:
@@ -170,32 +225,44 @@ def get_last_historical_prices(n: int = 1000):
         start -= 1
         n -= len(docs)
         
-    return {'prices':res}
+    return res
 
 @app.get('/reconnect/')
-async def attempt_reconnect():
+async def attempt_reconnect() -> dict:
+    '''
+    Attempt to connect to FXCM websocket
+
+    :return: Object containing FXCM websocket connection status
+    :rtype: dict
+    '''
     global PREV_CON_TIME
 
     PREV_CON_TIME = 0
     return {'Status': connect()}
 
 @app.get('/last-update/')
-async def get_last_connect():
+async def get_last_connect() -> dict:
+    '''
+    Show datetimes of last update attempts for price, database and FXCM connection
+
+    :return: Object showing datetime of last price update, last database update and last FXCM connection attempt
+    :rtype: dict
+    '''
     return {
         'Last price update': epoch_to_datetime(PRICE_UPDATE_TIME),
         'Last database update': epoch_to_datetime(PREV_DB_UPDATE_TIME),
         'Last FXCM connection attempt': epoch_to_datetime(PREV_CON_TIME),
     }
 
-
 @app.on_event('startup')
 async def schedule_interval():
+    '''
+    On app startup, schedule async background loop that continually queries for new prices every QUERY_INTERVAL seconds.
+    Insert new price data to database every DB_UPDATE_INTERVAL seconds
+    '''
     print_log('Starting background loop', 3)
     loop = asyncio.get_event_loop()
     loop.create_task(query_interval())
-
-# uvicorn main:app --host 0.0.0.0 --port 10000
-# uvicorn main:app --reload
 
 
 print('+-------+')
