@@ -2,6 +2,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database_handler import *
 from fastapi import FastAPI
 import datetime
+import uvicorn
 import asyncio
 import fxcmpy
 import time
@@ -112,7 +113,7 @@ def fetch_price(symbol: str, period: str) -> float:
             return 0
 
     try:
-        prices[symbol] = round(float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period, number=1)['bidclose']), 6)
+        prices[symbol] = round(float(CON.get_candles(symbol[:3] + '/' + symbol[-3:], period, number=1)['bidclose'].iloc[0]), 6)
     except:
         pass
 
@@ -265,10 +266,13 @@ async def schedule_interval():
     loop.create_task(query_interval())
 
 
-print('+-------+')
-print('| START |')
-print('+-------+')
-print('RECURSION INTERVAL      \t', QUERY_INTERVAL, 'secs')
-print('DATABASE UPDATE INTERVAL\t', DB_UPDATE_INTERVAL, 'secs')
-print('PREV DATABASE UPDATE    \t', epoch_to_datetime(PREV_DB_UPDATE_TIME))
-print()
+if __name__ == '__main__':
+    print('+-------+')
+    print('| START |')
+    print('+-------+')
+    print('RECURSION INTERVAL      \t', QUERY_INTERVAL, 'secs')
+    print('DATABASE UPDATE INTERVAL\t', DB_UPDATE_INTERVAL, 'secs')
+    print('PREV DATABASE UPDATE    \t', epoch_to_datetime(PREV_DB_UPDATE_TIME))
+    print()
+
+    uvicorn.run('main:app', host='0.0.0.0', port=10000, reload=True)
