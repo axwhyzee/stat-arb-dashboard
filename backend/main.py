@@ -50,7 +50,7 @@ if last_db_record:
         prices[pair] *= PIPS[pair]
 
 print('+--------------------------+')
-print('|    RECURSION INTERVAL    |', QUERY_INTERVAL / 60, 'mins')
+print('|      QUERY INTERVAL      |', QUERY_INTERVAL / 60, 'mins')
 print('+--------------------------+')
 print('| DATABASE UPDATE INTERVAL |', DB_UPDATE_INTERVAL / 60, 'mins')
 print('+--------------------------+')
