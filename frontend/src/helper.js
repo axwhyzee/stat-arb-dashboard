@@ -2,8 +2,7 @@ const pips = new Map();
 let cookies = {};
 let prices = {};
 
-// const API_URL = 'https://stat-arb-backend.onrender.com'
-const API_URL = 'http://127.0.0.1:8000'
+const API_URL = 'https://stat-arb-dashboard-rf9k.onrender.com'
 
 export function printLog(content) {
     /**
