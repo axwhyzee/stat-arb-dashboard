@@ -2,13 +2,6 @@ import React from "react";
 import CardItem from './CardItem';
 
 const Card = ({ portfolioID, portfolio, setActive, spread, isActive }) => {
-    /**
-     * @param {number}   portfolioID ID of current portfolio
-     * @param {Object[]} portfoliio  Array of objects, with each object containing value of a component in the current portfolio
-     * @param {function} setActive   Triggers upstream function to set current portfolio as active portfolio
-     * @param {number}   spread      Current spread value of portfolio
-     * @param {boolean}  isActive    Is current portfolio active
-     */
     return (
         <div className='p-2 pr-0'>
             <article className={'portfolio-card row ' + (isActive ? ' active-card' : '')} onClick={() => setActive(portfolioID)}>

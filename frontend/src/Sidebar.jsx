@@ -5,41 +5,22 @@ import { calcSpread, getPrice } from './helper';
 import { useEffect, useState } from 'react';
 
 const Sidebar = ({ id, spread, data, editPortfolio }) => {
-    /**
-     * Sidebar component for editing of active portfolio
-     * 
-     * @param {number}   id            ID of active portfolio
-     * @param {number}   spread        Current spread value of active portfolio
-     * @param {object[]} data          List of pair data, each containing FX symbol, entry price in points, beta value of pair in its current portfolio
-     * @param {function} editPortfolio Triggers upstream function to edit active portfolio
-     */
     const [pairs, setPairs] = useState(data);
     const [isExpanded, setIsExpanded] = useState(window.innerWidth > 380 ? true : false);
     const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
-        /**
-         * When active portfolio or current active portfolio's data changes, set new portfolio pairs as pairs state
-         */
         if (id !== -1) {
             setPairs(data);
         }
     }, [data, id])
 
     function toggleSidebar() {
-        /**
-         * Trigger window resize on sidebar expand/collapse so that graph updates its size
-         */
         setIsExpanded(!isExpanded);
-        window.dispatchEvent(new Event('resize'));
+        window.dispatchEvent(new Event('resize')); // trigger window resize so that graph svg updates its size
     }
 
     function removePair(pair) {
-        /**
-         * When pair is removed from portfolio, update pairs state and trigger upstream function to edit portfolio
-         * 
-         * @param {string} pair Symbol of FX pair to remove from active portfolio
-         */
         let newPairs = pairs.filter((item) => item.pair !== pair);
 
         editPortfolio(id, newPairs);
@@ -47,15 +28,8 @@ const Sidebar = ({ id, spread, data, editPortfolio }) => {
     }
 
     async function addPair(pair, entry, beta) {
-        /**
-         * Conduct data validation and display error message on error, else trigger upstream function to edit active portfolio
-         * 
-         * @param {String} pair  Symbol of pair to be added to active portfolio
-         * @param {number} entry Entry value in points of pair to be added to active portfolio
-         * @param {number} beta  Beta value of pair to be added to active portfolio
-         */
-
-        // 1) check for missing pair or beta value
+        // data validation
+        // 1) check for empty inputs
         if (!pair || !beta) {
             setErrorMsg('Missing required inputs')
             return;

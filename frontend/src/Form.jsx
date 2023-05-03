@@ -2,12 +2,6 @@ import React from "react";
 import { useState } from 'react';
 
 const Form = ({ addPair, errorMsg }) => {
-    /**
-     * Form to add a FX pair to a portfoliio with specified symbol, entry price and beta value
-     * 
-     * @param {function} addPair  Triggers a function upstream to edit portfolio
-     * @param {String}   errorMsg Error message to be displayed when user edits a portfolio incorrectly
-     */
     const [pair, setPair] = useState();
     const [entry, setEntry] = useState()
     const [beta, setBeta] = useState()

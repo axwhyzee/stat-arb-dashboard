@@ -140,7 +140,6 @@ main {
 }
 
 .cards-wrapper {
-    height: 100px;
     background-color: #171717;
     border-bottom: 1px solid #2d2d2d;
     position: absolute;
@@ -289,52 +288,16 @@ main {
     border: 0;
 }
 
-.graph-wrapper {
-    width: 100%;
-    height: 100%;
-    padding-top: 100px;
-    padding-bottom: 50px;
-    padding-left: 80px;
-}
-
 .graph {
     width: 100%;
     height: 100%;
     overflow: scroll;
-    border: 1px solid #333;
 }
 
 .graph>svg {
     width: 100%;
     min-width: 600px;
     height: 99%;
-    cursor: crosshair;
-    position: relative;
-    overflow: scroll;
-}
-
-.crosshair {
-    position: fixed;
-    opacity: 0;
-}
-
-/* horizontal */
-.crosshair-x {
-    position: absolute;
-    left: 0px;
-    right: 0px;
-    height: 1px;
-    background-color: #eeeeee34;
-}
-
-/* vertical */
-.crosshair-y {
-    position: absolute;
-    top: 0px;
-    bottom: 0px;
-    width: 1px;
-    height: 100%;
-    background-color: #eeeeee34;
 }
 
 .add-portfolio {

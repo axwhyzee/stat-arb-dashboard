@@ -2,10 +2,8 @@ import React from "react";
 import { roundOff } from './helper'
 
 const SetItem = ({ item, removePair }) => {
-    /**
-     * @param {object}   item       Object containing entry, price and beta value of a FX pair       
-     * @param {function} removePair Triggers function upstream to edit a portfolio with removal of current FX pair
-     */
+
+
     return (
         <tr className="set-item-info font-sm">
             <td className='pair-info'>{item.pair}</td>
