@@ -10,45 +10,40 @@ connection_string = f'mongodb+srv://admin:{password}@cluster0.lplvg1w.mongodb.ne
 
 client = MongoClient(connection_string)
 db = client['historical-prices']
-last_collection_idx = 0 # ID of last database collection
-collections = {} # mapping of database collection ID to its number of records. Store this so we can know when it's time to make a new collection
-records_limit = 10000 # max records per collection
+collections = {}
+last_collection_idx = 0
 
-def collection_name() -> str:
-    '''
-    Get name of last created collection in the database
+records_limit = 10000
 
-    :return: Name of last created collection in the database
-    :rtype: str
-    '''
+def collection_name():
     return f'prices_{last_collection_idx}'
 
-def num_collections() -> int:
-    '''
-    Return number of collections in database
+# assume collections are non-existent / empty
+def setup():
+    global last_collection_idx
+    import pandas as pd
+    
+    df = pd.read_csv("C:/Users/Siah Wee Hung/Desktop/old.csv")
 
-    :return: Number of collections in database
-    :rtype: int
-    '''
+    while df.shape[0]:
+        last_collection_idx += 1
+        col = collection_name()
+        collections[col] = df.shape[0]
+
+        insert_many_docs(col, df.iloc[:records_limit].to_dict(orient='records'))
+
+        df = df.iloc[records_limit:]
+
+def num_collections():
     return len(db.list_collection_names())
 
-def insert_many_docs(collection: str, docs: list[dict]):
-    '''
-    Insert multiple documents into a collection
-
-    :param str collection: Name of collection to insert document into
-    :param list[dict] docs: List of document objects to insert
-    '''
+def insert_many_docs(collection, docs):
     db[collection].insert_many(docs)
 
-def insert_doc(doc: dict):
-    '''
-    Insert single document into a collection
+def insert_doc(doc):
+    global last_collection_idx
 
-    :param dict doc: Document object to insert
-    '''
     if collections[collection_name()] == records_limit:
-        global last_collection_idx
         last_collection_idx += 1
         collections[collection_name()] = 1
     else:
@@ -57,26 +52,11 @@ def insert_doc(doc: dict):
     db[collection_name()].insert_one(doc)
 
 
-def find_all(collection: str) -> list[dict]:
-    '''
-    Fetch all documents from a collection
-
-    :param str collection: Name of collection to retrieve documents from
-    :return: List of document objects
-    :rtype: list[dict]
-    '''
+def find_all(collection):
     cursor = db[collection].find({}, {'_id':0}).sort('datetime', 1)
-
     return list(cursor)
 
-def find_last(collection: str):
-    '''
-    Find most recently added document from a collection
-
-    :param str collection: Name of collection to retrieve most recently added document from
-    :return: Document object
-    :rtype: dict
-    '''
+def find_last(collection):
     cursor = db[collection].find().sort('datetime', -1)
 
     data = cursor[0]
@@ -84,25 +64,13 @@ def find_last(collection: str):
 
     return data
 
-def delete_many_docs(collection: str, dates: list[int]) -> int:
-    '''
-    Delete multiple documents from a collection by date
-
-    :param str collection: Name of collection to delete documents from
-    :param list[int] dates: List of unix timestamps. Rows with a matching datetime value will be deleted 
-    :return: Number of deleted documents
-    :rtype: int
-    '''
+def delete_many_docs(collection, dates):
     deleted = db[collection].delete_many({'datetime': {'$in': dates}})
-
     return deleted.deleted_count
 
 
 # initialize
 def init_db():
-    '''
-    Initialise global variable values based on current state of database
-    '''
     global last_collection_idx
 
     for col in db.list_collection_names():
@@ -111,5 +79,14 @@ def init_db():
     
     last_collection_idx = len(collections)
 
+    print(collections)
+
+#def prune():
+#    datetimes = collection.find({}, {'_id':0}).sort('datetime', 1).distinct('datetime')
+#    length = len(datetimes)
+    
+#    if length > records_limit:
+#        deleted = delete_many(datetimes[:length - records_limit])
+#        print(f'Pruned: {length} - {deleted}')
 
 init_db()
