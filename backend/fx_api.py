@@ -1,17 +1,24 @@
-from dotenv import load_dotenv, find_dotenv
 import requests
 import os
 
-load_dotenv(find_dotenv())
 
-URL = "https://api.currencybeacon.com/v1/latest"
-
-PAIRS = ['AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF', 'CADJPY', 'CHFJPY', 'EURAUD', 'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY', 'EURNZD', 'EURUSD', 'GBPAUD', 'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPNZD', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY']
-
-PARAMS = {
-    "base": "USD",
-    "api_key": os.environ.get('API_KEY')
+PRICING_COMPONENT_MAP = {
+    'A': 'ask',
+    'B': 'bid',
+    'M': 'mid'
 }
+GRANULARITY = 'M1'
+PRICING_COMPONENT = 'A'
+PRICING_COMPONENT_FULL = PRICING_COMPONENT_MAP[PRICING_COMPONENT]
+PAIRS = ['AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF', 'CADJPY', 'CHFJPY', 'EURAUD', 'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY', 'EURNZD', 'EURUSD', 'GBPAUD', 'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPNZD', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY']
+URL = os.environ.get('OANDA_API_URL')
+HEADERS = {
+    'Authorization': os.environ.get('OANDA_API_KEY')
+}
+PARAMS = {
+    'candleSpecifications': ','.join([f'{pair[:3]}_{pair[3:]}:{GRANULARITY}:{PRICING_COMPONENT}' for pair in PAIRS])                          
+}
+
 
 def fetch_prices():
     '''
@@ -20,12 +27,14 @@ def fetch_prices():
     :return: JSON of prices
     :rtype: dict
     '''
-    response = requests.get(URL, params=PARAMS)
-    rates = response.json()['response']['rates']
-    prices = {}
+    response = requests.get(URL, params=PARAMS, headers=HEADERS)
+    data = response.json()
 
-    for pair in PAIRS:
-        base, quote = pair[:3], pair[3:]
-        prices[pair] = rates[quote] / rates[base]
-    
+    prices = {}
+    for pair_info in data['latestCandles']:
+        pair = pair_info['instrument'].replace('_', '')
+        prices[pair] = pair_info['candles'][-1][PRICING_COMPONENT_FULL]['o']
+
     return prices
+
+print(fetch_prices())

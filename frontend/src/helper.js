@@ -2,7 +2,7 @@ let cookies = {};
 const pips = new Map();
 let prices = {};
 
-const API_URL = 'https://stat-arb-dashboard-rf9k.onrender.com'
+const API_URL = process.env.REACT_APP_RENDER_API_URL;
 
 export function printLog(content) {
     const dt = new Date().toLocaleString('en-GB');

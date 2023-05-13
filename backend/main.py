@@ -1,3 +1,5 @@
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 from fastapi.middleware.cors import CORSMiddleware
 from functions import log, epoch_to_datetime
 from fx_api import fetch_prices, PAIRS
@@ -19,15 +21,10 @@ app.add_middleware(
 
 
 PIPS = {pair:0.01 if pair[3:] == 'JPY' else 0.0001 for pair in PAIRS}
-
-BASE_URL = 'https://stat-arb-dashboard-rf9k.onrender.com/'
-
 PREV_DB_UPDATE_TIME = 0
 DB_UPDATE_INTERVAL = 60 * 60 # add new record to database every 1 hour
-
 PREV_QUERY = 0
 QUERY_INTERVAL = 15 * 60 # query for pice updates every 15 mins
-
 LOOP_INTERVAL = 1 * 60 # Every 1 min, check if new query should be made
 PREV_LOOP = 0
 
