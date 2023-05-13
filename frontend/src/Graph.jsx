@@ -2,7 +2,7 @@ import React from 'react';
 import Spinner from './Spinner';
 import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { curveBasis, curveBumpX, curveBumpY, curveBundle, curveCardinalClosed, curveCardinalOpen, curveLinear, curveMonotoneX, curveMonotoneY, curveNatural, curveStep } from 'd3';
+import { curveMonotoneX } from 'd3';
 
 const Graph = ({ graphData, entry, current }) => {
     const [resize, setResize] = useState();
