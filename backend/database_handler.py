@@ -1,18 +1,11 @@
-from dotenv import load_dotenv, find_dotenv
 from pymongo import MongoClient
 import os
 
-# load env variable file
-load_dotenv(find_dotenv())
 
-password = os.environ.get("MONGODB_PWD")
-connection_string = f'mongodb+srv://admin:{password}@cluster0.lplvg1w.mongodb.net/?retryWrites=true&w=majority'
-
-client = MongoClient(connection_string)
+client = MongoClient(os.environ.get('MONGODB_URL'))
 db = client['historical-prices']
 collections = {}
 last_collection_idx = 0
-
 records_limit = 10000
 
 def collection_name():
@@ -59,7 +52,11 @@ def find_all(collection):
 def find_last(collection):
     cursor = db[collection].find().sort('datetime', -1)
 
-    data = cursor[0]
+    try:       
+        data = cursor[0]
+    except:
+        return {}
+
     del data['_id']
 
     return data
@@ -88,5 +85,3 @@ def init_db():
 #    if length > records_limit:
 #        deleted = delete_many(datetimes[:length - records_limit])
 #        print(f'Pruned: {length} - {deleted}')
-
-init_db()

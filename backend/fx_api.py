@@ -36,5 +36,3 @@ def fetch_prices():
         prices[pair] = pair_info['candles'][-1][PRICING_COMPONENT_FULL]['o']
 
     return prices
-
-print(fetch_prices())

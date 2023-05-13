@@ -30,6 +30,8 @@ PREV_LOOP = 0
 
 prices = {pair:0 for pair in PAIRS} # store current prices in memory
     
+init_db()
+
 last_db_record = find_last(f'prices_{num_collections()}')
 
 if last_db_record:
