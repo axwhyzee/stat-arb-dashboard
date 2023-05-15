@@ -33,6 +33,6 @@ def fetch_prices():
     prices = {}
     for pair_info in data['latestCandles']:
         pair = pair_info['instrument'].replace('_', '')
-        prices[pair] = pair_info['candles'][-1][PRICING_COMPONENT_FULL]['o']
+        prices[pair] = float(pair_info['candles'][-1][PRICING_COMPONENT_FULL]['o'])
 
     return prices
