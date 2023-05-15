@@ -24,6 +24,7 @@ __pycache__/
 .env.test.local
 .env.production.local
 .env
+setup.py
 pyvenv.cfg
 
 npm-debug.log*
