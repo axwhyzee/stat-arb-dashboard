@@ -1,8 +1,8 @@
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 from fastapi.middleware.cors import CORSMiddleware
-from functions import log, epoch_to_datetime
-from fx_api import fetch_prices, PAIRS
+from utils import log, epoch_to_datetime
+from api import fetch_prices, PAIRS
 from database_handler import *
 from fastapi import FastAPI
 import asyncio
