@@ -11,7 +11,7 @@ import { printLog, getPip, roundOff, calcSpread, getPrice, getPrices, getLastHis
 
 const App = () => {
     const queryInterval = 1000 * 60 * 5; // 5 mins in ms
-    const numPeriods = 250;
+    const numPeriods = 500;
 
     // stores graph data for active portfolio
     // [ {datetime, price}, ... ]
